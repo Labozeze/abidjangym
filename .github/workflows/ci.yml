@@ -1,0 +1,43 @@
+# CI AbidjanGym — maintenue par Eric (Entité C)
+# Déclenchée sur push des branches de travail (les PR ouvertes par le bot
+# GITHUB_TOKEN ne déclenchent pas d'autres workflows) et sur les PR.
+name: CI
+
+on:
+  push:
+    branches: ['feature/**', 'hotfix/**']
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Détection de secrets (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.18.4 \
+            detect --source=/repo --redact --verbose --exit-code 1
+
+  perimetre:
+    name: perimetre
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Garde-fou de périmètre par entité
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          BASE: ${{ github.base_ref || 'develop' }}
+        run: bash .github/scripts/perimetre.sh
