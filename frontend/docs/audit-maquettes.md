@@ -1,6 +1,6 @@
 # Audit des maquettes publiques AbidjanGym
 
-**Périmètre :** `demo/landing.html`, `demo/contact.html` et `demo/onboarding.html`, comparés au cahier des charges (`livrables/cahier-des-charges.md`, sections 4.1.1 à 4.1.5, 5 et 8). Cet audit porte sur le HTML et les styles visibles dans les maquettes. Il ne remplace pas une vérification du site dans un navigateur ni des tests clavier et lecteur d’écran.
+**Périmètre :** `demo/landing.html`, `demo/contact.html` et `demo/onboarding.html`, comparés au cahier des charges (`livrables/cahier-des-charges.md`, sections 1.3, 4.1.1 à 4.1.5, 5 et 8). Cet audit porte sur le HTML et les styles visibles dans les maquettes. Il ne remplace pas une vérification du site dans un navigateur ni des tests clavier et lecteur d’écran.
 
 ## Synthèse
 
@@ -9,7 +9,7 @@ Les maquettes couvrent une grande partie de la landing, le formulaire de contact
 | Priorité | Écart principal | Correction proposée |
 |---|---|---|
 | P1 | Aucune FAQ sur la landing, alors que le CDC demande au moins 8 questions. | Prévoir un bloc FAQ avec au moins 8 questions et réponses validées. |
-| P1 | La landing annonce 14 jours d’essai, l’onboarding 2 mois ; la durée n’est pas fixée dans les sections du CDC auditées. | Faire confirmer une durée unique par Rufin et l’utiliser partout. |
+| P1 | La landing affiche plusieurs fois 14 jours d’essai alors que le CDC §1.3 fixe 2 mois ; l’onboarding indique 2 mois. | Remplacer partout la durée de 14 jours par 2 mois et vérifier la cohérence des mentions. |
 | P1 | Plusieurs chiffres, témoignages et affirmations commerciales sont présentés comme réels sans source dans le CDC. | Faire valider chaque contenu par Rufin ou le remplacer par du contenu confirmé. |
 | P1 | Les pages légales et l’espace abonné n’ont pas de maquette. | Faire valider ces parcours et leurs contenus avant leur réalisation. |
 | P2 | Les exigences SEO sont largement absentes des `<head>` des maquettes. | Ajouter les métadonnées et données structurées prévues par le CDC dans les pages finales. |
@@ -25,7 +25,7 @@ Les maquettes couvrent une grande partie de la landing, le formulaire de contact
 |---|---|---|
 | Proposition de valeur compréhensible en moins de 5 secondes | Conforme | Le titre, le sous-titre et le visuel du hero présentent immédiatement la gestion de salle à Abidjan. Le temps de compréhension reste à vérifier auprès d’utilisateurs. |
 | Fonctionnalités clés illustrées | Conforme | Six fonctionnalités sont présentées avec icônes, titres et descriptions. |
-| Trois formules tarifaires avec CTA | Écart | Starter, Essentiel et Pro sont affichées avec un bouton chacune. Les prix et la durée d’essai doivent être confirmés ; la durée diffère de celle indiquée dans l’onboarding. |
+| Trois formules tarifaires avec CTA | Écart | Starter, Essentiel et Pro sont affichées avec un bouton chacune. Les montants (Starter gratuit, Essentiel 15 000 FCFA/mois, Pro 35 000 FCFA/mois) sont conformes au CDC §1.3. Les mentions de 14 jours sont en écart ; les avantages et limites détaillés restent à valider. |
 | Témoignages de gérants | Écart | Plusieurs témoignages sont visibles. Le CDC ne fournit pas ces témoignages ni les identités et résultats associés : faire valider leur authenticité avant publication. |
 | Section FAQ | Absent | Aucune section de questions-réponses n’est présente. Ajouter au moins 8 questions, comme demandé par le CDC. |
 | CTA « J’inscris ma salle » en haut et en bas | Conforme | Le CTA figure dans la navigation et le hero, puis dans le CTA final. D’autres CTA apparaissent au fil de la page. |
@@ -41,10 +41,10 @@ Les maquettes couvrent une grande partie de la landing, le formulaire de contact
 | 3 | Preuves sociales : logos partenaires ou chiffres clés | Écart | Un bandeau de chiffres est présent. Les valeurs affichées ne sont pas étayées par le CDC : les confirmer ou les retirer. |
 | 4 | Six fonctionnalités avec icônes et descriptions | Conforme | Six cartes sont présentes et comprennent chacune une icône, un titre et une description. |
 | 5 | Section « Pour les gérants » et bénéfices business | Écart | Les sections sur le contrôle des abonnés et la gestion donnent des bénéfices, sans bloc clairement identifié « Pour les gérants ». Regrouper et nommer explicitement ces bénéfices. |
-| 6 | Trois cartes tarifaires Starter / Essentiel / Pro | Écart | Les trois cartes et CTA sont présents. Faire valider les montants, les avantages et la durée d’essai, qui est contradictoire entre les maquettes. |
+| 6 | Trois cartes tarifaires Starter / Essentiel / Pro | Conforme | Les trois cartes et CTA sont présents. Les montants affichés correspondent au CDC §1.3. Faire valider les limites et avantages détaillés, non précisés par le CDC. |
 | 7 | Témoignages | Écart | Les cartes sont présentes, mais les noms, salles, citations et résultats nécessitent validation avant publication. |
 | 8 | FAQ en accordéon, au moins 8 questions | Absent | Aucun contenu FAQ n’a été trouvé. Ajouter le bloc et prévoir une interaction accessible au clavier. |
-| 9 | CTA final | Conforme | Un bloc de fin de page propose l’inscription. Il répète cependant la promesse d’essai de 14 jours, à harmoniser. |
+| 9 | CTA final | Écart | Un bloc de fin de page propose l’inscription, mais répète la durée d’essai de 14 jours. Remplacer cette mention par 2 mois, conformément au CDC §1.3, comme dans le reste de la maquette et l’onboarding. |
 | 10 | Pied de page avec liens, légal et réseaux sociaux | Écart | Le pied de page comprend les rubriques Produit, Support, Légal et des réseaux sociaux. Plusieurs liens pointent vers `#` et ne mènent donc à aucune page. Relier les destinations validées. |
 
 ## 2. Contact — CDC §4.1.2
@@ -89,7 +89,7 @@ Les liens « Confidentialité », « Conditions d’utilisation » et « Cookies
 | Étape 2 — Email | Conforme | Champ présent et indiqué comme requis. |
 | Étape 2 — Numéro Mobile Money | Conforme | Champ présent. Le CDC ne précise pas s’il est obligatoire ; clarifier le caractère requis avant l’intégration. |
 | Étape 2 — Mot de passe | Conforme | Mot de passe et confirmation sont présents et indiqués comme requis. |
-| Étape 3 — Choix Starter / Essentiel / Pro | Conforme | Les trois formules figurent sous forme de choix. Les prix, avantages et durée d’essai doivent être validés. |
+| Étape 3 — Choix Starter / Essentiel / Pro | Conforme | Les trois formules sont proposées et l’essai de 2 mois est indiqué, conformément au CDC §1.3. Les montants affichés correspondent au CDC ; faire valider les limites et avantages détaillés. |
 | Étape 3 — Résumé de la formule | Conforme | Le récapitulatif de formule apparaît à l’étape suivante. |
 | Étape 4 — Récapitulatif et acceptation des CGU | Conforme | Un récapitulatif de salle et de formule ainsi qu’une case d’acceptation sont présents. Les liens légaux associés doivent pointer vers les pages réelles. |
 | À la validation — création du compte via l’API | Écart | Le script de la maquette affiche un succès local ; il ne démontre pas une création de compte via API. Connecter au contrat d’API validé. |
@@ -144,8 +144,8 @@ Les liens « Confidentialité », « Conditions d’utilisation » et « Cookies
 
 ## Décisions à faire valider
 
-1. Durée exacte de l’essai et cohérence de cette information sur landing, tarifs et onboarding.
-2. Prix, limites et avantages réels des formules Starter, Essentiel et Pro.
+1. Aucune décision à prendre sur la durée : le CDC §1.3 fixe 2 mois. Remplacer les occurrences « 14 jours » sur la landing.
+2. Limites et avantages détaillés des formules Starter, Essentiel et Pro ; les montants sont fixés par le CDC §1.3.
 3. Authenticité des chiffres, témoignages, identités et affirmations de performance affichés.
 4. Contenu des huit questions FAQ au minimum et décision sur une page Tarifs distincte.
 5. Contenus légaux et coordonnées de contact, dont la destination WhatsApp.
