@@ -1,0 +1,3580 @@
+# Contrat d'API AbidjanGym — v0.1 (brouillon à valider par Rufin)
+#
+# Référence : livrables/cahier-des-charges.md (CDC) §4.2, §6.2, §6.3, §7.2, §10
+# Rédigé par : Entité B (DeepSeek) — ticket #9
+# Statut : v0.1 — aucune implémentation avant validation (CDC §2.5.4.b, point de contrôle 2)
+#
+# Convention : les valeurs machine (enum, noms de champs) sont en anglais snake_case ;
+# tous les messages destinés à l'utilisateur sont en français (AGENTS.md §5.7).
+# Les valeurs manquantes sont marquées [À FOURNIR] et jamais inventées (AGENTS.md §5.3).
+
+openapi: 3.0.3
+
+info:
+  title: API AbidjanGym
+  version: 0.1.0
+  description: |
+    API REST de la plateforme SaaS multi-tenant **AbidjanGym** (gestion de salles de sport,
+    Côte d'Ivoire). Elle sert le backoffice gérant/caissier (`app.abidjangym.com`), l'espace
+    abonné (`member.abidjangym.com`) et le front public (`abidjangym.com`).
+
+    ## Conventions générales
+    - Préfixe versionné `/api/v1/`, JSON uniquement (`Content-Type: application/json`).
+    - Montants exprimés en **francs CFA entiers** (`*_xof`), sans décimales (CDC §4.2.4).
+    - Dates et heures au format ISO 8601 avec fuseau, ex. `2026-10-31T18:30:00+00:00`.
+      Fuseau par défaut de la plateforme : `Africa/Abidjan` (GMT+0).
+    - Pagination par `?page=&per_page=` (défaut 20, maximum 100), enveloppe
+      `{ "data": [], "meta": { ... }, "links": { ... } }`.
+    - Erreurs au format commun `{ "message": "...", "errors": {} }`, messages en français.
+
+    ## Isolation multi-tenant (CDC §6.3)
+    Chaque ressource métier appartient à une **salle** (`tenant_id`). Le tenant est déduit du
+    jeton authentifié, **jamais** d'un paramètre de requête. Toute ressource d'un autre tenant
+    est traitée comme inexistante : l'API répond `404` et non `403`, afin de ne pas révéler
+    l'existence de données d'une autre salle.
+
+    ## Authentification
+    Deux usages du même compte, selon le client :
+    - **Backoffice** : jeton en cookie `httpOnly` (`SessionCookie`), posé par `POST /auth/login`.
+    - **API / clients tiers** : `Authorization: Bearer <jeton>` (`BearerAuth`).
+
+    Les routes marquées `security: []` sont publiques (santé, connexion, onboarding, contact,
+    callbacks de paiement, consommation d'un lien magique).
+
+    ## Valeurs non disponibles
+    Les identifiants réels des prestataires (Orange Money, MTN MoMo, Wave, CinetPay,
+    WhatsApp Business, SMS) ne sont pas fournis : les champs et en-têtes correspondants sont
+    marqués `[À FOURNIR]`. Aucune URL, clé ou numéro plausible n'est inventé.
+  contact:
+    name: Le Labo de Zézé — AbidjanGym
+    email: "[À FOURNIR] — adresse de contact technique"
+    url: https://abidjangym.com
+  license:
+    name: Propriétaire — tous droits réservés
+    url: https://abidjangym.com
+
+servers:
+  - url: https://api.abidjangym.com/api/v1
+    description: Production (CDC §3.3)
+  - url: https://staging.abidjangym.com/api/v1
+    description: Staging
+  - url: http://localhost:8000/api/v1
+    description: Développement local (Laravel `php artisan serve`)
+
+tags:
+  - name: Santé
+    description: Supervision et vérification de disponibilité.
+  - name: Authentification
+    description: Connexion, rafraîchissement, déconnexion et réinitialisation du mot de passe (backoffice).
+  - name: Salles
+    description: Onboarding d'une salle et profil de la salle courante.
+  - name: Plans
+    description: Types d'abonnement vendus par une salle (mensuel, hebdomadaire, journalier, pack).
+  - name: Abonnés
+    description: Membres d'une salle, recherche, QR code et historiques.
+  - name: Abonnements
+    description: Abonnements d'un membre, renouvellement et suspension.
+  - name: Paiements
+    description: Enregistrement comptable, reçus PDF et callbacks Mobile Money.
+  - name: Contrôle d'accès
+    description: Scan du QR code et historique des entrées.
+  - name: Tableau de bord
+    description: Widgets du tableau de bord (CDC §4.2.2).
+  - name: Espace abonné
+    description: Endpoints consommés par `member.abidjangym.com`.
+  - name: Contact
+    description: Formulaire de contact public.
+
+security:
+  - BearerAuth: []
+  - SessionCookie: []
+
+paths:
+  # ---------------------------------------------------------------------------
+  # Santé
+  # ---------------------------------------------------------------------------
+  /health:
+    get:
+      operationId: getHealth
+      tags: [Santé]
+      summary: État de santé de l'API
+      description: |
+        Endpoint public utilisé par le déploiement et le monitoring (CDC §4.2, `backend/AGENTS.md` §7).
+        Ne dépend pas d'une session.
+      security: []
+      responses:
+        '200':
+          description: API opérationnelle.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, version, time, database]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded]
+                    example: ok
+                  version:
+                    type: string
+                    example: 0.1.0
+                  time:
+                    type: string
+                    format: date-time
+                    example: '2026-10-31T18:30:00+00:00'
+                  database:
+                    type: string
+                    enum: [ok, unavailable]
+                    example: ok
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '503':
+          description: Service indisponible (base de données injoignable ou maintenance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  # ---------------------------------------------------------------------------
+  # Authentification (backoffice)
+  # ---------------------------------------------------------------------------
+  /auth/login:
+    post:
+      operationId: login
+      tags: [Authentification]
+      summary: Connexion d'un utilisateur du backoffice
+      description: |
+        Authentifie un gérant ou un caissier (CDC §4.2.1). En cas de succès, renvoie le jeton
+        et pose le cookie `httpOnly` `ag_session` pour le backoffice.
+
+        Limitation : 5 tentatives par minute et par IP (CDC §6.4), puis `429`.
+        5 échecs consécutifs bloquent temporairement le compte (CDC §6.2).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: gerant@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: MotDePasse1
+                remember_device:
+                  type: boolean
+                  default: false
+                  description: Prolonge la session au-delà de 8 h (CDC §4.2.1) — `[À FOURNIR]` durée exacte.
+      responses:
+        '200':
+          description: Connexion réussie.
+          headers:
+            Set-Cookie:
+              description: Cookie `ag_session` httpOnly, SameSite=Lax, Secure (CDC §6.2).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, token_type, access_token, expires_in]
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token_type:
+                    type: string
+                    enum: [Bearer]
+                  access_token:
+                    type: string
+                    description: Jeton d'accès (1 h). Absent si le client utilise uniquement le cookie.
+                  refresh_token:
+                    type: string
+                    description: |
+                      Jeton de rafraîchissement (30 j, CDC §6.2). En cookie httpOnly pour le
+                      backoffice ; `[À FOURNIR]` — exposition au client non tranchée.
+                  expires_in:
+                    type: integer
+                    description: Durée de vie du jeton d'accès, en secondes.
+                    example: 3600
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      operationId: refreshSession
+      tags: [Authentification]
+      summary: Rafraîchir le jeton d'accès
+      description: |
+        Émet un nouveau jeton d'accès à partir du jeton de rafraîchissement valide
+        (cookie httpOnly ou corps). La session est prolongée automatiquement en cas d'activité
+        (CDC §4.2.1).
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: Si absent, le cookie httpOnly fait foi.
+      responses:
+        '200':
+          description: Nouveau jeton émis.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [access_token, token_type, expires_in]
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    enum: [Bearer]
+                  expires_in:
+                    type: integer
+                    example: 3600
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [Authentification]
+      summary: Déconnexion
+      description: |
+        Révoque le jeton courant côté serveur (liste noire en base, CDC §6.2) et efface le
+        cookie de session.
+      responses:
+        '204':
+          description: Déconnecté.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [Authentification]
+      summary: Demander un lien de réinitialisation
+      description: |
+        Envoie un lien de réinitialisation valable 1 h, uniquement à l'adresse enregistrée
+        (CDC §4.2.1, §6.2). La réponse est identique que l'adresse existe ou non, afin de ne
+        pas révéler l'existence d'un compte.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '202':
+          description: Demande acceptée (envoi asynchrone via cron, CDC §3.2).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Si cette adresse existe, un lien de réinitialisation a été envoyé.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [Authentification]
+      summary: Réinitialiser le mot de passe
+      description: |
+        Consomme un jeton à usage unique et définit le nouveau mot de passe.
+        Règle : 8 caractères minimum, 1 majuscule, 1 chiffre (CDC §6.2).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, token, password, password_confirmation]
+              properties:
+                email:
+                  type: string
+                  format: email
+                token:
+                  type: string
+                password:
+                  $ref: '#/components/schemas/NewPassword'
+                password_confirmation:
+                  type: string
+      responses:
+        '204':
+          description: Mot de passe modifié ; tous les jetons existants sont révoqués.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [Authentification]
+      summary: Utilisateur courant
+      description: Renvoie l'utilisateur authentifié, sa salle et son rôle.
+      responses:
+        '200':
+          description: Utilisateur courant.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ---------------------------------------------------------------------------
+  # Salles (tenants)
+  # ---------------------------------------------------------------------------
+  /gyms:
+    post:
+      operationId: createGym
+      tags: [Salles]
+      summary: Inscrire une nouvelle salle (onboarding)
+      description: |
+        Flux CDC §10.1 : crée la salle (tenant), son compte administrateur, active le plan SaaS
+        choisi et déclenche l'email de confirmation. Endpoint public.
+
+        Effet de bord : génération de l'identifiant de salle, envoi de l'email de confirmation
+        (asynchrone) et retour de l'URL du backoffice.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [gym, admin, plan_code, terms_accepted]
+              properties:
+                gym:
+                  $ref: '#/components/schemas/GymRegistration'
+                admin:
+                  $ref: '#/components/schemas/AdminRegistration'
+                plan_code:
+                  type: string
+                  enum: [starter, essentiel, pro]
+                  description: Formule SaaS choisie à l'étape 3 (CDC §4.1.4).
+                terms_accepted:
+                  type: boolean
+                  description: Acceptation des CGU et de la politique de confidentialité (CDC §6.6).
+      responses:
+        '201':
+          description: Salle créée.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [gym_id, administration_url]
+                    properties:
+                      gym_id:
+                        $ref: '#/components/schemas/TenantId'
+                      administration_url:
+                        type: string
+                        format: uri
+                        example: https://app.abidjangym.com/dashboard
+                      message:
+                        type: string
+                        example: Votre salle a été créée. Consultez votre email pour confirmer votre compte.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /gyms/current:
+    get:
+      operationId: getCurrentGym
+      tags: [Salles]
+      summary: Profil de la salle courante
+      description: Fiche complète de la salle (CDC §4.2.3).
+      responses:
+        '200':
+          description: Profil de la salle.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Gym'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateCurrentGym
+      tags: [Salles]
+      summary: Modifier le profil de la salle
+      description: |
+        Mise à jour partielle. Le gérant peut personnaliser l'ensemble des champs de la fiche
+        (CDC §4.2.3) : coordonnées, horaires, couleurs, bannières, réseaux sociaux, message
+        de bienvenue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GymUpdate'
+      responses:
+        '200':
+          description: Profil mis à jour.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Gym'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /gyms/current/logo:
+    post:
+      operationId: uploadGymLogo
+      tags: [Salles]
+      summary: Téléverser le logo de la salle
+      description: |
+        PNG ou JPG, 2 Mo maximum, redimensionné à 300×300 px (CDC §4.2.3).
+        Remplace le logo existant.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [logo]
+              properties:
+                logo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Logo enregistré.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [logo_url]
+                    properties:
+                      logo_url:
+                        type: string
+                        format: uri
+                        example: https://api.abidjangym.com/storage/gyms/42/logo.png
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /gyms/current/banners:
+    post:
+      operationId: addGymBanner
+      tags: [Salles]
+      summary: Ajouter une image bannière
+      description: Trois bannières maximum (CDC §4.2.3), format 16:9 recommandé.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [banner]
+              properties:
+                banner:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Bannière ajoutée.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/GymBanner'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /gyms/current/banners/{bannerId}:
+    delete:
+      operationId: deleteGymBanner
+      tags: [Salles]
+      summary: Supprimer une image bannière
+      parameters:
+        - $ref: '#/components/parameters/BannerId'
+      responses:
+        '204':
+          description: Bannière supprimée.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------------------
+  # Plans d'abonnement
+  # ---------------------------------------------------------------------------
+  /plans:
+    get:
+      operationId: listPlans
+      tags: [Plans]
+      summary: Lister les plans de la salle
+      description: |
+        Plans triés par `display_order`. Un caissier ne voit que les plans actifs ; un gérant
+        peut demander `status=inactive` ou `status=all`.
+      parameters:
+        - name: status
+          in: query
+          description: Filtre sur le statut. `all` réservé aux gérants.
+          schema:
+            type: string
+            enum: [active, inactive, all]
+            default: all
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Liste des plans.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createPlan
+      tags: [Plans]
+      summary: Créer un plan
+      description: |
+        Réservé au gérant. Un plan de type `pack` exige `days_included` et
+        `validity_window_days` (CDC §4.2.4).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanInput'
+      responses:
+        '201':
+          description: Plan créé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /plans/{planId}:
+    get:
+      operationId: getPlan
+      tags: [Plans]
+      summary: Détail d'un plan
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Plan demandé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updatePlan
+      tags: [Plans]
+      summary: Modifier un plan
+      description: |
+        Le prix d'un plan peut être modifié : les abonnements et paiements déjà enregistrés
+        conservent le montant historique (le prix des plans n'est jamais rétroactif).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanInput'
+      responses:
+        '200':
+          description: Plan mis à jour.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Plan'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      operationId: archivePlan
+      tags: [Plans]
+      summary: Archiver un plan
+      description: |
+        Archivage logique (le plan passe à `inactive`) : jamais de suppression physique, car des
+        abonnements et paiements y font référence.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '204':
+          description: Plan archivé.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /plans/order:
+    put:
+      operationId: reorderPlans
+      tags: [Plans]
+      summary: Réordonner les plans
+      description: |
+        Enregistre l'ordre d'affichage issu du glisser-déposer (CDC §4.2.4). La liste doit
+        contenir exactement les identifiants des plans de la salle.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan_ids]
+              properties:
+                plan_ids:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: integer
+                    format: int64
+      responses:
+        '204':
+          description: Ordre enregistré.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ---------------------------------------------------------------------------
+  # Abonnés
+  # ---------------------------------------------------------------------------
+  /members:
+    get:
+      operationId: listMembers
+      tags: [Abonnés]
+      summary: Lister et rechercher les abonnés
+      description: |
+        Liste paginée avec recherche plein texte et filtres (CDC §4.2.5) : prénom, nom,
+        numéro de membre, téléphone. Le caissier a accès en lecture et création ; la
+        suppression et la suspension sont réservées au gérant.
+      parameters:
+        - name: search
+          in: query
+          description: Recherche sur prénom, nom, numéro de membre et téléphone.
+          schema:
+            type: string
+            maxLength: 100
+        - name: status
+          in: query
+          description: |
+            État calculé de l'abonné. `new` = profil sans abonnement, `active` = abonnement
+            valide aujourd'hui, `expiring_soon` = expire dans 7 jours ou moins,
+            `expired`, `suspended`.
+          schema:
+            $ref: '#/components/schemas/MemberStatus'
+        - name: plan_id
+          in: query
+          description: Filtre sur le plan de l'abonnement en cours.
+          schema:
+            type: integer
+            format: int64
+        - name: district
+          in: query
+          description: Commune ou quartier déclaré à l'inscription.
+          schema:
+            type: string
+            maxLength: 80
+        - name: expires_from
+          in: query
+          description: Date d'expiration minimale (incluse), au format `YYYY-MM-DD`.
+          schema:
+            type: string
+            format: date
+        - name: expires_to
+          in: query
+          description: Date d'expiration maximale (incluse), au format `YYYY-MM-DD`.
+          schema:
+            type: string
+            format: date
+        - name: sort
+          in: query
+          description: Ordre de tri.
+          schema:
+            type: string
+            enum: [name_asc, name_desc, created_at_desc, created_at_asc, expires_at_asc, expires_at_desc, entries_desc]
+            default: name_asc
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Liste paginée d'abonnés.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MemberSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      operationId: createMember
+      tags: [Abonnés]
+      summary: Créer un abonné
+      description: |
+        Crée le profil, génère le numéro de membre (`AAAA-XXXXX`) et le QR code (UUID v4)
+        (CDC §10.2). L'abonnement et le paiement éventuels se créent ensuite via
+        `POST /subscriptions` et `POST /payments`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '201':
+          description: Abonné créé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /members/export:
+    get:
+      operationId: exportMembers
+      tags: [Abonnés]
+      summary: Exporter la liste filtrée en CSV
+      description: |
+        Export CSV de la liste filtrée, mêmes paramètres que `GET /members` (CDC §4.2.5).
+        Séparateur `;` et encodage UTF-8 avec BOM, pour ouverture directe dans un tableur.
+        Action journalisée dans le journal d'audit (CDC §6.6 : export de données).
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/MemberStatus'
+        - name: plan_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: district
+          in: query
+          schema:
+            type: string
+        - name: expires_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: expires_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Fichier CSV.
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /members/{memberId}:
+    get:
+      operationId: getMember
+      tags: [Abonnés]
+      summary: Fiche détaillée d'un abonné
+      description: |
+        Profil complet, abonnement en cours et compteurs (CDC §4.2.5). Les historiques sont
+        servis par les endpoints dédiés ci-dessous.
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Fiche de l'abonné.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MemberDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateMember
+      tags: [Abonnés]
+      summary: Modifier un abonné
+      description: Mise à jour partielle du profil. Le numéro de membre et l'UUID du QR code ne sont pas modifiables.
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '200':
+          description: Abonné mis à jour.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      operationId: archiveMember
+      tags: [Abonnés]
+      summary: Archiver un abonné
+      description: |
+        Archivage logique (CDC §4.2.5, action « Archiver »). Réservé au gérant. Les paiements
+        et reçus restent conservés pour la comptabilité.
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '204':
+          description: Abonné archivé.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/suspend:
+    post:
+      operationId: suspendMember
+      tags: [Abonnés]
+      summary: Suspendre un abonné
+      description: |
+        Blocage temporaire manuel (CDC §4.2.5). Les scans suivants sont refusés avec le motif
+        `suspended`. Réservé au gérant.
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 255
+                  description: Motif interne de la suspension (non communiqué à l'abonné).
+      responses:
+        '200':
+          description: Abonné suspendu.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/reactivate:
+    post:
+      operationId: reactivateMember
+      tags: [Abonnés]
+      summary: Réactiver un abonné suspendu
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Abonné réactivé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/subscriptions:
+    get:
+      operationId: listMemberSubscriptions
+      tags: [Abonnés]
+      summary: Historique des abonnements d'un abonné
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Abonnements de l'abonné, du plus récent au plus ancien.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/payments:
+    get:
+      operationId: listMemberPayments
+      tags: [Abonnés]
+      summary: Historique des paiements d'un abonné
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Paiements de l'abonné.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/entries:
+    get:
+      operationId: listMemberEntries
+      tags: [Abonnés]
+      summary: Historique des entrées d'un abonné
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Entrées enregistrées pour cet abonné.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Entry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/qr:
+    get:
+      operationId: getMemberQrCode
+      tags: [Abonnés]
+      summary: Télécharger le QR code d'un abonné
+      description: |
+        PNG 800×800 px par défaut, ou SVG vectoriel (CDC §4.2.9). Le QR code encode l'UUID
+        du membre, valable pour tous ses abonnements successifs.
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [png, svg]
+            default: png
+        - name: size
+          in: query
+          description: Côté de l'image en pixels (PNG uniquement).
+          schema:
+            type: integer
+            minimum: 200
+            maximum: 2000
+            default: 800
+      responses:
+        '200':
+          description: Image du QR code.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/svg+xml:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/qr/regenerate:
+    post:
+      operationId: regenerateMemberQrCode
+      tags: [Abonnés]
+      summary: Régénérer le QR code d'un abonné
+      description: |
+        En cas de perte (CDC §4.2.9). L'ancien UUID est invalidé immédiatement : les scans
+        avec l'ancien QR code sont refusés. Réservé au gérant.
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Nouveau QR code généré.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [qr_uuid, qr_url]
+                    properties:
+                      qr_uuid:
+                        $ref: '#/components/schemas/Uuid'
+                      qr_url:
+                        type: string
+                        format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{memberId}/qr/send:
+    post:
+      operationId: sendMemberQrCode
+      tags: [Abonnés]
+      summary: Renvoyer le QR code à l'abonné
+      description: |
+        Action manuelle de l'admin (CDC §4.2.7, « QR code — renvoi ») : envoi WhatsApp (image)
+        ou email (pièce jointe). Envoi effectué par le scheduler, d'où la réponse `202`.
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel:
+                  type: string
+                  enum: [whatsapp, email]
+      responses:
+        '202':
+          description: Envoi programmé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Le QR code sera envoyé à l'abonné.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ---------------------------------------------------------------------------
+  # Abonnements
+  # ---------------------------------------------------------------------------
+  /subscriptions:
+    get:
+      operationId: listSubscriptions
+      tags: [Abonnements]
+      summary: Lister les abonnements de la salle
+      parameters:
+        - name: member_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/SubscriptionStatus'
+        - name: expires_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: expires_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Liste paginée d'abonnements.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createSubscription
+      tags: [Abonnements]
+      summary: Créer un abonnement pour un abonné
+      description: |
+        Souscrit un plan pour un abonné et calcule les dates de validité (CDC §4.2.4) :
+        - `monthly` : 30 jours calendaires à partir de `starts_at` ;
+        - `weekly` : 7 jours calendaires ;
+        - `daily` : jusqu'à 23 h 59 le jour d'activation ;
+        - `pack` : `days_included` séances utilisables dans `validity_window_days` jours.
+
+        Le paiement associé se crée séparément (`POST /payments`), afin de gérer les cas
+        « paiement en attente » (virement, chèque) sans bloquer l'abonnement.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionInput'
+      responses:
+        '201':
+          description: Abonnement créé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Abonné ou plan introuvable dans cette salle.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /subscriptions/{subscriptionId}:
+    get:
+      operationId: getSubscription
+      tags: [Abonnements]
+      summary: Détail d'un abonnement
+      parameters:
+        - $ref: '#/components/parameters/SubscriptionId'
+      responses:
+        '200':
+          description: Abonnement demandé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /subscriptions/{subscriptionId}/renew:
+    post:
+      operationId: renewSubscription
+      tags: [Abonnements]
+      summary: Renouveler un abonnement
+      description: |
+        Flux CDC §10.3. La nouvelle période commence le **lendemain de l'expiration** si
+        l'abonnement est encore valide, ou le **jour même** s'il est déjà expiré. Le plan peut
+        changer au renouvellement. Le paiement se crée ensuite via `POST /payments`.
+      parameters:
+        - $ref: '#/components/parameters/SubscriptionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan_id]
+              properties:
+                plan_id:
+                  type: integer
+                  format: int64
+                  description: Plan de la nouvelle période (peut différer du plan précédent).
+                starts_at:
+                  type: string
+                  format: date
+                  description: Force la date de début. Par défaut, calcul automatique décrit ci-dessus.
+      responses:
+        '201':
+          description: Nouvel abonnement créé (l'ancien reste dans l'historique).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /subscriptions/{subscriptionId}/suspend:
+    post:
+      operationId: suspendSubscription
+      tags: [Abonnements]
+      summary: Suspendre un abonnement
+      description: |
+        Suspension administrative d'un abonnement (CDC §4.2.10). Les scans sont refusés
+        jusqu'à réactivation. Réservé au gérant.
+      parameters:
+        - $ref: '#/components/parameters/SubscriptionId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Abonnement suspendu.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /subscriptions/{subscriptionId}/reactivate:
+    post:
+      operationId: reactivateSubscription
+      tags: [Abonnements]
+      summary: Réactiver un abonnement suspendu
+      parameters:
+        - $ref: '#/components/parameters/SubscriptionId'
+      responses:
+        '200':
+          description: Abonnement réactivé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------------------
+  # Paiements
+  # ---------------------------------------------------------------------------
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [Paiements]
+      summary: Lister les paiements
+      description: |
+        Liste filtrable pour l'historique comptable (CDC §4.2.6), avec totaux par mode de
+        paiement sur la période filtrée.
+      parameters:
+        - name: from
+          in: query
+          description: Date de paiement minimale (incluse).
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Date de paiement maximale (incluse).
+          schema:
+            type: string
+            format: date
+        - name: mode
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentMode'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentStatus'
+        - name: member_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: amount_min
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: amount_max
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Liste paginée de paiements avec totaux.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+                      totals:
+                        type: object
+                        description: Totaux des paiements **confirmés** de la période filtrée.
+                        properties:
+                          grand_total_xof:
+                            type: integer
+                            example: 1250000
+                          by_mode:
+                            type: object
+                            additionalProperties:
+                              type: integer
+                            example:
+                              cash: 450000
+                              orange_money: 600000
+                              wave: 200000
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      operationId: createPayment
+      tags: [Paiements]
+      summary: Enregistrer un paiement
+      description: |
+        Enregistrement manuel par le gérant ou le caissier (CDC §4.2.6).
+
+        Statut initial selon le mode :
+        - `cash`, `orange_money`, `mtn_momo`, `wave`, `cinetpay` → `confirmed` ;
+        - `bank_transfer`, `cheque` → `pending`, jusqu'à confirmation manuelle
+          (`POST /payments/{paymentId}/confirm`) avec justificatif.
+
+        Le montant peut différer du prix du plan (remise manuelle, CDC §4.2.6).
+        Un reçu est généré dès que le paiement est confirmé.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentInput'
+      responses:
+        '201':
+          description: Paiement enregistré.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Abonné, abonnement ou plan introuvable dans cette salle.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payments/export:
+    get:
+      operationId: exportPayments
+      tags: [Paiements]
+      summary: Exporter les paiements en CSV
+      description: Export comptable de la période filtrée (CDC §4.2.6). Action journalisée (§6.6).
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: mode
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentMode'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentStatus'
+      responses:
+        '200':
+          description: Fichier CSV.
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /payments/callback/{provider}:
+    post:
+      operationId: paymentCallback
+      tags: [Paiements]
+      summary: Callback d'un prestataire Mobile Money
+      description: |
+        Notification serveur-à-serveur d'un prestataire après paiement (CDC §10.5 :
+        `POST /api/v1/payments/callback/orange`). Endpoint **public** : l'authentification
+        repose sur la signature du prestataire, pas sur un jeton utilisateur.
+
+        Traitement : vérification de la signature, recherche de la transaction par
+        `external_reference`, passage du paiement au statut `confirmed`, puis génération et
+        envoi du reçu (asynchrone). L'appel est **idempotent** : un callback rejoué ne crée
+        pas de doublon.
+
+        `[À FOURNIR]` — pour chaque prestataire : nom de l'en-tête de signature, algorithme,
+        secret partagé et format exact de la charge utile.
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [orange, mtn, wave, cinetpay]
+      requestBody:
+        required: true
+        description: Charge utile propre au prestataire `[À FOURNIR]`.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Callback accepté.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+        '400':
+          description: Charge utile illisible ou signature absente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Transaction inconnue pour ce prestataire.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: Signature invalide (paiement non modifié).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /payments/{paymentId}:
+    get:
+      operationId: getPayment
+      tags: [Paiements]
+      summary: Détail d'un paiement
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Paiement demandé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updatePayment
+      tags: [Paiements]
+      summary: Modifier un paiement
+      description: |
+        Correction d'un paiement existant : notes internes, référence externe, date.
+        Le montant et le mode d'un paiement **confirmé** ne sont pas modifiables : il faut
+        l'annuler et le recréer, afin de préserver la piste d'audit (CDC §6.6).
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paid_at:
+                  type: string
+                  format: date-time
+                external_reference:
+                  type: string
+                  maxLength: 120
+                notes:
+                  type: string
+                  maxLength: 1000
+      responses:
+        '200':
+          description: Paiement mis à jour.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payments/{paymentId}/confirm:
+    post:
+      operationId: confirmPayment
+      tags: [Paiements]
+      summary: Confirmer un paiement en attente
+      description: |
+        Utilisé pour les virements et chèques (CDC §4.2.6) : passage `pending` → `confirmed`,
+        génération du reçu. Réservé au gérant.
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Paiement confirmé et reçu généré.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Paiement déjà confirmé ou annulé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /payments/{paymentId}/cancel:
+    post:
+      operationId: cancelPayment
+      tags: [Paiements]
+      summary: Annuler un paiement
+      description: |
+        Passage au statut `cancelled` (CDC §4.2.6 et §4.2.10). Réservé au gérant.
+        Le reçu éventuel est marqué annulé ; il n'est jamais supprimé.
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Paiement annulé.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payments/{paymentId}/proof:
+    post:
+      operationId: uploadPaymentProof
+      tags: [Paiements]
+      summary: Joindre un justificatif de paiement
+      description: |
+        Photo du chèque ou bordereau de virement, 5 Mo maximum (CDC §4.2.6).
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [proof]
+              properties:
+                proof:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Justificatif enregistré.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payments/{paymentId}/receipt:
+    get:
+      operationId: downloadReceipt
+      tags: [Paiements]
+      summary: Télécharger le reçu PDF
+      description: |
+        Reçu conforme au CDC §4.2.8 : logo, nom et couleur primaire de la salle, coordonnées,
+        numéro `REC-AAAA-XXXXX`, informations de l'abonné et de l'abonnement, montant, mode,
+        référence, pied de page personnalisable, QR code optionnel, signature optionnelle.
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Reçu PDF.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Paiement introuvable, non confirmé, ou reçu non encore généré.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /payments/{paymentId}/receipt/link:
+    post:
+      operationId: createReceiptLink
+      tags: [Paiements]
+      summary: Générer un lien de téléchargement du reçu
+      description: |
+        Lien temporaire valable **72 h** (CDC §4.2.8), utilisable pour partage WhatsApp/email.
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Lien généré.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [url, expires_at]
+                    properties:
+                      url:
+                        type: string
+                        format: uri
+                      expires_at:
+                        type: string
+                        format: date-time
+                        example: '2026-11-03T18:30:00+00:00'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------------------
+  # Contrôle d'accès
+  # ---------------------------------------------------------------------------
+  /access/{uuid}:
+    get:
+      operationId: scanAccess
+      tags: [Contrôle d'accès]
+      summary: Valider un passage à partir du QR code
+      description: |
+        Flux CDC §10.4 : le caissier scanne le QR code depuis `/scan`, l'interface appelle cet
+        endpoint avec l'UUID lu.
+
+        Réponse `200` dans les deux cas d'un QR code connu :
+        - `access_granted: true` → passage enregistré dans l'historique des entrées ;
+        - `access_granted: false` → affichage du motif, **aucun** passage enregistré.
+
+        Un UUID inconnu, révoqué (QR régénéré) ou appartenant à une autre salle renvoie `404` :
+        l'interface doit l'afficher comme « QR invalide » (CDC §4.2.9). Ce choix évite de
+        révéler l'existence d'un abonné d'une autre salle.
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: UUID v4 encodé dans le QR code de l'abonné.
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Résultat du scan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessScanResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: QR code invalide, révoqué, ou appartenant à une autre salle.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+                example:
+                  message: QR code invalide.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /entries:
+    get:
+      operationId: listEntries
+      tags: [Contrôle d'accès]
+      summary: Historique des entrées
+      description: |
+        Journal des passages validés de la salle (CDC §4.2.5, §4.2.11), filtrable par période,
+        abonné et caissier.
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: member_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: cashier_id
+          in: query
+          description: Utilisateur ayant validé le passage.
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Liste paginée des entrées.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Entry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ---------------------------------------------------------------------------
+  # Tableau de bord
+  # ---------------------------------------------------------------------------
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [Tableau de bord]
+      summary: Données du tableau de bord
+      description: |
+        Agrège les huit widgets du CDC §4.2.2 pour la salle courante. L'interface interroge cet
+        endpoint toutes les 60 s.
+
+        `[À FOURNIR]` — granularité de conservation des séries (profondeur d'historique) à
+        arbitrer avec Eric pour tenir sur l'hébergement mutualisé.
+      parameters:
+        - name: alerts_limit
+          in: query
+          description: Nombre maximal d'abonnés retournés dans les listes d'alerte.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Données agrégées.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ---------------------------------------------------------------------------
+  # Espace abonné (member.abidjangym.com)
+  # ---------------------------------------------------------------------------
+  /member/auth/magic-link:
+    post:
+      operationId: requestMemberMagicLink
+      tags: [Espace abonné]
+      summary: Demander un lien de connexion
+      description: |
+        Connexion de l'abonné par lien magique (CDC §4.1.5), envoyé par WhatsApp ou email.
+        La réponse est identique que l'adresse existe ou non, pour ne pas révéler les comptes.
+
+        `[À FOURNIR]` — durée de validité du lien magique (proposition : 15 min, à trancher
+        avec Rufin, la politique de réinitialisation du CDC §6.2 étant de 1 h).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '202':
+          description: Demande acceptée.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Si votre adresse est enregistrée, un lien de connexion vous a été envoyé.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /member/auth/magic-link/verify:
+    post:
+      operationId: verifyMemberMagicLink
+      tags: [Espace abonné]
+      summary: Consommer un lien de connexion
+      description: Vérifie le jeton reçu par WhatsApp/email et ouvre une session abonné.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Session ouverte.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [access_token, token_type, expires_in, member]
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    enum: [Bearer]
+                  expires_in:
+                    type: integer
+                    example: 3600
+                  member:
+                    $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /member/profile:
+    get:
+      operationId: getMemberProfile
+      tags: [Espace abonné]
+      summary: Mon profil
+      description: Profil en lecture seule pour l'abonné connecté (CDC §4.2.10).
+      security:
+        - MemberBearer: []
+      responses:
+        '200':
+          description: Profil de l'abonné connecté.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Member'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /member/subscription:
+    get:
+      operationId: getMemberActiveSubscription
+      tags: [Espace abonné]
+      summary: Mon abonnement en cours
+      description: Type de plan, date d'expiration et jours restants (CDC §4.1.5).
+      security:
+        - MemberBearer: []
+      responses:
+        '200':
+          description: Abonnement en cours.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    allOf:
+                      - $ref: '#/components/schemas/Subscription'
+                    nullable: true
+                    description: "`null` si l'abonné n'a aucun abonnement en cours."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /member/subscriptions:
+    get:
+      operationId: listMemberOwnSubscriptions
+      tags: [Espace abonné]
+      summary: Mon historique d'abonnements
+      security:
+        - MemberBearer: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Historique des abonnements.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Subscription'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /member/payments:
+    get:
+      operationId: listMemberOwnPayments
+      tags: [Espace abonné]
+      summary: Mon historique de paiements
+      description: Date, montant, mode et lien de reçu PDF (CDC §4.1.5).
+      security:
+        - MemberBearer: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Historique des paiements.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /member/entries:
+    get:
+      operationId: listMemberOwnEntries
+      tags: [Espace abonné]
+      summary: Mon historique d'entrées
+      security:
+        - MemberBearer: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Historique des passages.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Entry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /member/qr:
+    get:
+      operationId: getMemberOwnQrCode
+      tags: [Espace abonné]
+      summary: Mon QR code
+      description: Affichage en grand et téléchargement PNG (CDC §4.1.5).
+      security:
+        - MemberBearer: []
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [png, svg]
+            default: png
+      responses:
+        '200':
+          description: Image du QR code.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/svg+xml:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ---------------------------------------------------------------------------
+  # Contact
+  # ---------------------------------------------------------------------------
+  /contact-messages:
+    post:
+      operationId: createContactMessage
+      tags: [Contact]
+      summary: Envoyer un message depuis la page contact
+      description: |
+        Formulaire public de `abidjangym.com/contact` (CDC §4.1.2) : prénom, nom, email,
+        téléphone, objet, message. Déclenche un email vers l'équipe (SMTP `[À FOURNIR]`).
+        Protection anti-pourriel : limitation par IP.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactMessageInput'
+      responses:
+        '201':
+          description: Message reçu.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Merci, votre message a bien été envoyé. Nous répondons sous 24 h.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Jeton d'accès transmis dans `Authorization: Bearer <jeton>` (CDC §7.2).
+        Durée 1 h, rafraîchi via `POST /auth/refresh`.
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: ag_session
+      description: |
+        Cookie `httpOnly`, `Secure`, `SameSite=Lax` posé par `POST /auth/login` pour le
+        backoffice (CDC §6.2). Non accessible depuis JavaScript.
+
+    MemberBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Jeton d'accès de l'**abonné** (`member.abidjangym.com`), obtenu via un lien magique
+        (`POST /member/auth/magic-link/verify`). Portée limitée au membre lui-même : aucun
+        accès aux données de la salle ni aux autres abonnés.
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Numéro de page, à partir de 1.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PerPage:
+      name: per_page
+      in: query
+      description: Nombre d'éléments par page (maximum 100).
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      description: Identifiant de l'abonné.
+      schema:
+        type: integer
+        format: int64
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      description: Identifiant du plan.
+      schema:
+        type: integer
+        format: int64
+    SubscriptionId:
+      name: subscriptionId
+      in: path
+      required: true
+      description: Identifiant de l'abonnement.
+      schema:
+        type: integer
+        format: int64
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      description: Identifiant du paiement.
+      schema:
+        type: integer
+        format: int64
+    BannerId:
+      name: bannerId
+      in: path
+      required: true
+      description: Identifiant de la bannière.
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    Unauthorized:
+      description: Authentification absente, invalide ou expirée.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            message: Unauthenticated.
+    Forbidden:
+      description: |
+        Authentification valide mais action interdite au rôle courant (CDC §4.2.10), par exemple
+        un caissier qui tente d'accéder aux paramètres ou de supprimer une donnée.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            message: Action non autorisée pour votre rôle.
+    NotFound:
+      description: |
+        Ressource inexistante **ou appartenant à une autre salle** (CDC §6.3 : un tenant ne doit
+        pas pouvoir déduire l'existence de données d'un autre tenant).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            message: Ressource introuvable.
+    ValidationError:
+      description: Données invalides (validation Laravel). Le détail est dans `errors`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            message: Les données fournies sont invalides.
+            errors:
+              email:
+                - Le champ email doit être une adresse email valide.
+              price_xof:
+                - Le prix doit être un entier positif.
+    TooManyRequests:
+      description: Trop de requêtes (limitation de débit, CDC §6.4).
+      headers:
+        Retry-After:
+          description: Délai en secondes avant nouvel essai.
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            message: Trop de tentatives. Réessayez dans une minute.
+    ServerError:
+      description: Erreur interne du serveur.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            message: Une erreur inattendue est survenue.
+
+  schemas:
+    # --- Primitives et enveloppes ---------------------------------------------
+    Uuid:
+      type: string
+      format: uuid
+      description: Identifiant UUID v4 (CDC §4.2.9).
+      example: 550e8400-e29b-41d4-a716-446655440000
+
+    TenantId:
+      type: integer
+      format: int64
+      description: Identifiant de la salle (tenant). Isolant toutes les données métier (CDC §6.3).
+      example: 42
+
+    NewPassword:
+      type: string
+      format: password
+      minLength: 8
+      maxLength: 72
+      description: |
+        8 caractères minimum, dont 1 majuscule et 1 chiffre (CDC §6.2). Haché en bcrypt
+        avec un coût ≥ 12 côté serveur. Jamais renvoyé ni journalisé.
+      example: MotDePasse1
+
+    Phone:
+      type: string
+      pattern: '^\+[1-9][0-9]{7,14}$'
+      description: Numéro international au format E.164 (utilisé pour WhatsApp et SMS).
+      example: '+2250700000001'
+
+    ApiError:
+      type: object
+      required: [message]
+      description: Format d'erreur commun à toutes les routes (CDC §7.2).
+      properties:
+        message:
+          type: string
+          description: Message lisible en français.
+        errors:
+          type: object
+          description: Dictionnaire champ → liste de messages, présent sur les erreurs 422.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    PaginationMeta:
+      type: object
+      required: [current_page, per_page, total, last_page]
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 348
+        last_page:
+          type: integer
+          example: 18
+
+    PaginationLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          format: uri
+          nullable: true
+        prev:
+          type: string
+          format: uri
+          nullable: true
+        next:
+          type: string
+          format: uri
+          nullable: true
+        last:
+          type: string
+          format: uri
+          nullable: true
+
+    PaginatedResponse:
+      type: object
+      required: [data, meta, links]
+      properties:
+        data:
+          type: array
+          items: {}
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+
+    # --- Énumérations métier ---------------------------------------------------
+    MemberStatus:
+      type: string
+      description: |
+        État calculé d'un abonné (CDC §4.2.5) :
+        - `new` → « Nouveau » : profil sans abonnement ;
+        - `active` → « Actif » ;
+        - `expiring_soon` → « Expire bientôt » (7 jours ou moins) ;
+        - `expired` → « Expiré » ;
+        - `suspended` → « Suspendu » (blocage manuel).
+      enum: [new, active, expiring_soon, expired, suspended]
+
+    SubscriptionStatus:
+      type: string
+      description: État de l'abonnement lui-même (distinct de l'état de l'abonné).
+      enum: [active, expired, suspended, cancelled]
+
+    PlanType:
+      type: string
+      description: |
+        Types de plan du CDC §4.2.4 : `monthly` (30 j), `weekly` (7 j), `daily` (jour même),
+        `pack` (X séances dans une fenêtre de Y jours).
+      enum: [monthly, weekly, daily, pack]
+
+    PaymentMode:
+      type: string
+      description: |
+        Modes de paiement du CDC §4.2.6. `cash` (espèces), `orange_money`, `mtn_momo`, `wave`,
+        `cinetpay` (carte bancaire), `bank_transfer` (virement), `cheque`.
+      enum: [cash, orange_money, mtn_momo, wave, cinetpay, bank_transfer, cheque]
+
+    PaymentStatus:
+      type: string
+      description: |
+        `confirmed` → « Confirmé » ; `pending` → « En attente » (virement, chèque, Mobile Money
+        non confirmé) ; `cancelled` → « Annulé ».
+      enum: [confirmed, pending, cancelled]
+
+    UserRole:
+      type: string
+      description: Rôles du CDC §4.2.10.
+      enum: [gym_admin, cashier, super_admin]
+
+    # --- Utilisateurs ----------------------------------------------------------
+    User:
+      type: object
+      required: [id, first_name, last_name, email, role]
+      properties:
+        id:
+          type: integer
+          format: int64
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+        gym_id:
+          $ref: '#/components/schemas/TenantId'
+        is_active:
+          type: boolean
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    UserSummary:
+      type: object
+      description: Utilisateur réduit, embarqué dans les ressources métier.
+      properties:
+        id:
+          type: integer
+          format: int64
+        first_name:
+          type: string
+        last_name:
+          type: string
+
+    # --- Salles ----------------------------------------------------------------
+    GymRegistration:
+      type: object
+      description: Étape 1 de l'onboarding (CDC §4.1.4).
+      required: [name, district, address, phone, whatsapp]
+      properties:
+        name:
+          type: string
+          maxLength: 80
+          example: Salle Fit Abidjan
+        district:
+          type: string
+          maxLength: 80
+          description: Quartier ou commune.
+          example: Cocody
+        address:
+          type: string
+          maxLength: 255
+          example: Rue des Jardins, Cocody
+        phone:
+          $ref: '#/components/schemas/Phone'
+        whatsapp:
+          $ref: '#/components/schemas/Phone'
+
+    AdminRegistration:
+      type: object
+      description: Étape 2 de l'onboarding — compte administrateur de la salle.
+      required: [first_name, last_name, email, mobile_money_number, password]
+      properties:
+        first_name:
+          type: string
+          maxLength: 60
+        last_name:
+          type: string
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          example: gerant@example.com
+        mobile_money_number:
+          $ref: '#/components/schemas/Phone'
+        password:
+          $ref: '#/components/schemas/NewPassword'
+
+    DaySchedule:
+      type: object
+      description: Plage d'ouverture d'un jour (CDC §4.2.3).
+      required: [closed]
+      properties:
+        closed:
+          type: boolean
+          description: "`true` si la salle est fermée ce jour-là."
+        open:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+          description: Heure d'ouverture, format `HH:MM` (fuseau `Africa/Abidjan`).
+          example: '06:00'
+        close:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+          description: Heure de fermeture, format `HH:MM`.
+          example: '22:00'
+
+    OpeningHours:
+      type: object
+      description: Horaires d'ouverture par jour + jours fériés (CDC §4.2.3).
+      properties:
+        monday:
+          $ref: '#/components/schemas/DaySchedule'
+        tuesday:
+          $ref: '#/components/schemas/DaySchedule'
+        wednesday:
+          $ref: '#/components/schemas/DaySchedule'
+        thursday:
+          $ref: '#/components/schemas/DaySchedule'
+        friday:
+          $ref: '#/components/schemas/DaySchedule'
+        saturday:
+          $ref: '#/components/schemas/DaySchedule'
+        sunday:
+          $ref: '#/components/schemas/DaySchedule'
+        holidays:
+          type: array
+          description: Jours fériés où la salle est fermée.
+          items:
+            type: string
+            format: date
+
+    SocialLinks:
+      type: object
+      description: Réseaux sociaux de la salle (CDC §4.2.3).
+      properties:
+        instagram:
+          type: string
+          format: uri
+          nullable: true
+        facebook:
+          type: string
+          format: uri
+          nullable: true
+        tiktok:
+          type: string
+          format: uri
+          nullable: true
+        whatsapp_business:
+          $ref: '#/components/schemas/Phone'
+
+    GymBanner:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        url:
+          type: string
+          format: uri
+        sort_order:
+          type: integer
+          description: Ordre d'affichage, de 1 à 3.
+
+    Gym:
+      type: object
+      description: Fiche complète de la salle (CDC §4.2.3).
+      properties:
+        id:
+          $ref: '#/components/schemas/TenantId'
+        name:
+          type: string
+          example: Salle Fit Abidjan
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+        tagline:
+          type: string
+          nullable: true
+          maxLength: 120
+        address:
+          type: string
+        district:
+          type: string
+        city:
+          type: string
+          default: Abidjan
+        phone:
+          $ref: '#/components/schemas/Phone'
+        whatsapp:
+          $ref: '#/components/schemas/Phone'
+        email:
+          type: string
+          format: email
+          nullable: true
+        website:
+          type: string
+          format: uri
+          nullable: true
+        opening_hours:
+          $ref: '#/components/schemas/OpeningHours'
+        primary_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          example: '#0F766E'
+        secondary_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          example: '#F59E0B'
+        banners:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/GymBanner'
+        social_links:
+          $ref: '#/components/schemas/SocialLinks'
+        timezone:
+          type: string
+          description: Fuseau horaire de la salle (défaut `Africa/Abidjan`).
+          example: Africa/Abidjan
+        currency:
+          type: string
+          description: Devise. `XOF` uniquement en v1 (CDC §4.2.3, non modifiable).
+          enum: [XOF]
+          default: XOF
+        welcome_message:
+          type: string
+          nullable: true
+          maxLength: 500
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    GymUpdate:
+      type: object
+      description: Mise à jour partielle du profil de la salle ; tous les champs sont facultatifs.
+      properties:
+        name:
+          type: string
+          maxLength: 80
+        tagline:
+          type: string
+          maxLength: 120
+          nullable: true
+        address:
+          type: string
+          maxLength: 255
+        district:
+          type: string
+          maxLength: 80
+        phone:
+          $ref: '#/components/schemas/Phone'
+        whatsapp:
+          $ref: '#/components/schemas/Phone'
+        email:
+          type: string
+          format: email
+          nullable: true
+        website:
+          type: string
+          format: uri
+          nullable: true
+        opening_hours:
+          $ref: '#/components/schemas/OpeningHours'
+        primary_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        secondary_color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        social_links:
+          $ref: '#/components/schemas/SocialLinks'
+        timezone:
+          type: string
+        welcome_message:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    # --- Plans -----------------------------------------------------------------
+    Plan:
+      type: object
+      description: Type d'abonnement vendu par une salle (CDC §4.2.4).
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 80
+          example: Pass Découverte
+        type:
+          $ref: '#/components/schemas/PlanType'
+        days_included:
+          type: integer
+          nullable: true
+          description: Obligatoire pour `pack` (nombre de séances), `null` sinon.
+          example: 10
+        validity_window_days:
+          type: integer
+          nullable: true
+          description: Obligatoire pour `pack` (fenêtre d'utilisation en jours), `null` sinon.
+          example: 60
+        price_xof:
+          type: integer
+          minimum: 0
+          description: Prix en francs CFA, entier, sans décimales.
+          example: 25000
+        description:
+          type: string
+          nullable: true
+          maxLength: 200
+        status:
+          type: string
+          enum: [active, inactive]
+          description: Un plan `inactive` est masqué lors de la création d'un abonnement.
+        display_order:
+          type: integer
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PlanSummary:
+      type: object
+      description: Plan réduit, embarqué dans un abonnement ou un paiement.
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/PlanType'
+        price_xof:
+          type: integer
+
+    PlanInput:
+      type: object
+      required: [name, type, price_xof]
+      properties:
+        name:
+          type: string
+          maxLength: 80
+        type:
+          $ref: '#/components/schemas/PlanType'
+        days_included:
+          type: integer
+          minimum: 1
+          maximum: 3650
+          nullable: true
+          description: Requis si `type = pack`.
+        validity_window_days:
+          type: integer
+          minimum: 1
+          maximum: 3650
+          nullable: true
+          description: Requis si `type = pack`.
+        price_xof:
+          type: integer
+          minimum: 0
+          maximum: 100000000
+        description:
+          type: string
+          maxLength: 200
+          nullable: true
+        status:
+          type: string
+          enum: [active, inactive]
+          default: active
+        display_order:
+          type: integer
+          minimum: 0
+
+    # --- Abonnés ---------------------------------------------------------------
+    Member:
+      type: object
+      description: Profil d'un abonné (CDC §4.2.5).
+      properties:
+        id:
+          type: integer
+          format: int64
+        member_number:
+          type: string
+          pattern: '^[0-9]{4}-[0-9]{5}$'
+          description: Numéro auto-généré au format `AAAA-XXXXX`.
+          example: 2026-00042
+        qr_uuid:
+          $ref: '#/components/schemas/Uuid'
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          $ref: '#/components/schemas/Phone'
+        email:
+          type: string
+          format: email
+          nullable: true
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+          enum: [male, female, unspecified]
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        internal_notes:
+          type: string
+          nullable: true
+          description: Notes visibles uniquement par l'administration de la salle.
+        status:
+          $ref: '#/components/schemas/MemberStatus'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    MemberInput:
+      type: object
+      required: [first_name, last_name, phone]
+      properties:
+        first_name:
+          type: string
+          maxLength: 60
+        last_name:
+          type: string
+          maxLength: 60
+        phone:
+          $ref: '#/components/schemas/Phone'
+        email:
+          type: string
+          format: email
+          nullable: true
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          type: string
+          enum: [male, female, unspecified]
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        internal_notes:
+          type: string
+          maxLength: 2000
+          nullable: true
+
+    ActiveSubscriptionSummary:
+      type: object
+      description: Abonnement en cours d'un abonné, embarqué dans les listes.
+      properties:
+        id:
+          type: integer
+          format: int64
+        plan_name:
+          type: string
+        plan_type:
+          $ref: '#/components/schemas/PlanType'
+        starts_at:
+          type: string
+          format: date
+        ends_at:
+          type: string
+          format: date
+        days_remaining:
+          type: integer
+          nullable: true
+          description: Jours restants ; `null` pour un plan `daily` ou `pack`.
+          example: 12
+        sessions_remaining:
+          type: integer
+          nullable: true
+          description: Séances restantes pour un plan `pack`, `null` sinon.
+          example: 3
+        status:
+          $ref: '#/components/schemas/SubscriptionStatus'
+
+    MemberSummary:
+      type: object
+      description: Ligne de la liste des abonnés.
+      properties:
+        id:
+          type: integer
+          format: int64
+        member_number:
+          type: string
+          example: 2026-00042
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          $ref: '#/components/schemas/Phone'
+        status:
+          $ref: '#/components/schemas/MemberStatus'
+        active_subscription:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/ActiveSubscriptionSummary'
+          nullable: true
+          description: "`null` si l'abonné n'a aucun abonnement en cours."
+        last_entry_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    MemberDetail:
+      allOf:
+        - $ref: '#/components/schemas/Member'
+        - type: object
+          properties:
+            active_subscription:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/ActiveSubscriptionSummary'
+              nullable: true
+            history_counts:
+              type: object
+              description: Compteurs affichés sur la fiche détaillée.
+              properties:
+                subscriptions:
+                  type: integer
+                  example: 3
+                payments:
+                  type: integer
+                  example: 3
+                entries:
+                  type: integer
+                  example: 47
+
+    # --- Abonnements -----------------------------------------------------------
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        member_id:
+          type: integer
+          format: int64
+        plan:
+          $ref: '#/components/schemas/PlanSummary'
+        starts_at:
+          type: string
+          format: date
+        ends_at:
+          type: string
+          format: date
+          description: |
+            Fin de validité calculée selon le type de plan. Pour `daily`, le jour même à
+            23 h 59 ; pour `pack`, fin de la fenêtre d'utilisation.
+        status:
+          $ref: '#/components/schemas/SubscriptionStatus'
+        sessions_total:
+          type: integer
+          nullable: true
+          description: Nombre de séances du pack ; `null` hors pack.
+        sessions_remaining:
+          type: integer
+          nullable: true
+          description: Séances restantes du pack ; `null` hors pack.
+        created_at:
+          type: string
+          format: date-time
+
+    SubscriptionInput:
+      type: object
+      required: [member_id, plan_id]
+      properties:
+        member_id:
+          type: integer
+          format: int64
+        plan_id:
+          type: integer
+          format: int64
+        starts_at:
+          type: string
+          format: date
+          description: |
+            Date de début souhaitée. Par défaut, aujourd'hui. Le serveur refuse une date de
+            début qui chevaucherait un abonnement encore actif : utiliser
+            `POST /subscriptions/{subscriptionId}/renew` dans ce cas.
+        notes:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    # --- Paiements -------------------------------------------------------------
+    Payment:
+      type: object
+      description: Paiement enregistré (CDC §4.2.6).
+      properties:
+        id:
+          type: integer
+          format: int64
+        receipt_number:
+          type: string
+          nullable: true
+          pattern: '^REC-[0-9]{4}-[0-9]{5}$'
+          description: Numéro de reçu auto-incrémenté, attribué à la confirmation.
+          example: REC-2026-00127
+        member:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            member_number:
+              type: string
+            first_name:
+              type: string
+            last_name:
+              type: string
+        subscription_id:
+          type: integer
+          format: int64
+          nullable: true
+        plan:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/PlanSummary'
+          nullable: true
+        amount_xof:
+          type: integer
+          minimum: 0
+          description: Montant effectivement payé, en francs CFA entiers.
+          example: 25000
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        paid_at:
+          type: string
+          format: date-time
+        external_reference:
+          type: string
+          nullable: true
+          description: Numéro de transaction Mobile Money, de chèque ou de virement.
+        notes:
+          type: string
+          nullable: true
+          description: Notes internes, jamais visibles par l'abonné.
+        proof_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Justificatif téléversé (virement, chèque).
+        receipt_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Lien de téléchargement du reçu PDF, `null` tant que le paiement n'est pas confirmé.
+        created_by:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/UserSummary'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    PaymentInput:
+      type: object
+      required: [member_id, plan_id, amount_xof, mode]
+      properties:
+        member_id:
+          type: integer
+          format: int64
+        plan_id:
+          type: integer
+          format: int64
+        subscription_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: Abonnement couvert par ce paiement, s'il est déjà créé.
+        amount_xof:
+          type: integer
+          minimum: 0
+          maximum: 100000000
+          description: Peut différer du prix du plan (remise manuelle, CDC §4.2.6).
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        paid_at:
+          type: string
+          format: date-time
+          description: Par défaut, l'instant de l'enregistrement.
+        external_reference:
+          type: string
+          maxLength: 120
+          nullable: true
+        status:
+          allOf:
+            - $ref: '#/components/schemas/PaymentStatus'
+          description: |
+            Facultatif : le statut découle du mode par défaut (`pending` pour virement et
+            chèque, `confirmed` sinon). Envoyer `confirmed` sur un virement est refusé (422).
+        notes:
+          type: string
+          maxLength: 1000
+          nullable: true
+
+    # --- Contrôle d'accès ------------------------------------------------------
+    ScanMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        member_number:
+          type: string
+          example: 2026-00042
+        first_name:
+          type: string
+        last_name:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+
+    ScanSubscription:
+      type: object
+      properties:
+        plan_name:
+          type: string
+        plan_type:
+          $ref: '#/components/schemas/PlanType'
+        ends_at:
+          type: string
+          format: date
+        days_remaining:
+          type: integer
+          nullable: true
+        sessions_remaining:
+          type: integer
+          nullable: true
+
+    AccessScanResult:
+      type: object
+      description: Résultat d'un scan de QR code (CDC §4.2.9, §10.4).
+      required: [access_granted, scanned_at]
+      properties:
+        access_granted:
+          type: boolean
+          description: |
+            `true` = accès autorisé, fond vert ; `false` = accès refusé, fond rouge avec motif.
+        reason:
+          type: string
+          enum: [granted, subscription_expired, no_active_subscription, member_suspended, subscription_suspended, pack_exhausted]
+          description: |
+            Motif technique du refus (`granted` si l'accès est autorisé). Un QR code inconnu ne
+            produit pas de motif : la route répond `404`.
+        message:
+          type: string
+          description: Message à afficher tel quel par l'interface, en français.
+          example: Accès autorisé — Pass Mensuel, 12 jours restants.
+        member:
+          $ref: '#/components/schemas/ScanMember'
+        subscription:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/ScanSubscription'
+          nullable: true
+        entry_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: Identifiant du passage enregistré ; `null` si l'accès est refusé.
+        scanned_at:
+          type: string
+          format: date-time
+
+    Entry:
+      type: object
+      description: Passage enregistré dans l'historique des entrées (CDC §4.2.9).
+      properties:
+        id:
+          type: integer
+          format: int64
+        member_id:
+          type: integer
+          format: int64
+        member_number:
+          type: string
+          example: 2026-00042
+        member_name:
+          type: string
+          example: Aboubakar Traoré
+        scanned_at:
+          type: string
+          format: date-time
+        cashier:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Caissier ayant validé le passage.
+
+    # --- Tableau de bord -------------------------------------------------------
+    RevenuePoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        total_xof:
+          type: integer
+          example: 75000
+
+    AttendancePoint:
+      type: object
+      properties:
+        hour:
+          type: integer
+          minimum: 0
+          maximum: 23
+          example: 18
+        entries:
+          type: integer
+          example: 14
+
+    PaymentSummary:
+      type: object
+      description: Dernier paiement affiché sur le tableau de bord.
+      properties:
+        id:
+          type: integer
+          format: int64
+        member_name:
+          type: string
+        amount_xof:
+          type: integer
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        paid_at:
+          type: string
+          format: date-time
+
+    AlertMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        member_number:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        ends_at:
+          type: string
+          format: date
+          nullable: true
+        days_remaining:
+          type: integer
+          nullable: true
+
+    DashboardSummary:
+      type: object
+      description: Les huit widgets du CDC §4.2.2.
+      required: [counts, expiring_soon, revenue_last_30_days, attendance_by_hour, last_payments, alerts]
+      properties:
+        counts:
+          type: object
+          description: Compteurs du jour.
+          required: [active_members, revenue_today_xof, entries_today]
+          properties:
+            active_members:
+              type: integer
+              description: Abonnés dont l'abonnement est valide aujourd'hui.
+              example: 184
+            revenue_today_xof:
+              type: integer
+              description: Somme des paiements confirmés depuis 00 h 00.
+              example: 275000
+            entries_today:
+              type: integer
+              description: Nombre de scans validés depuis 00 h 00.
+              example: 63
+        expiring_soon:
+          type: object
+          description: Abonnés dont l'abonnement expire dans 7 jours ou moins.
+          required: [count, members]
+          properties:
+            count:
+              type: integer
+              example: 12
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/AlertMember'
+        revenue_last_30_days:
+          type: array
+          description: Revenus journaliers des 30 derniers jours (courbe).
+          items:
+            $ref: '#/components/schemas/RevenuePoint'
+        attendance_by_hour:
+          type: array
+          description: Entrées par heure sur la semaine courante (histogramme).
+          items:
+            $ref: '#/components/schemas/AttendancePoint'
+        last_payments:
+          type: array
+          description: Cinq derniers paiements enregistrés.
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/PaymentSummary'
+        alerts:
+          type: object
+          description: Abonnés expirés sans renouvellement depuis plus de 7 jours.
+          required: [expired_not_renewed_count, members]
+          properties:
+            expired_not_renewed_count:
+              type: integer
+              example: 9
+            members:
+              type: array
+              items:
+                $ref: '#/components/schemas/AlertMember'
+
+    # --- Contact ---------------------------------------------------------------
+    ContactMessageInput:
+      type: object
+      description: Formulaire de contact public (CDC §4.1.2).
+      required: [first_name, last_name, email, subject, message]
+      properties:
+        first_name:
+          type: string
+          maxLength: 60
+        last_name:
+          type: string
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          example: visiteur@example.com
+        phone:
+          $ref: '#/components/schemas/Phone'
+        subject:
+          type: string
+          maxLength: 150
+          example: Demande d'information sur les formules
+        message:
+          type: string
+          maxLength: 5000
+          example: Bonjour, je gère une salle à Yopougon et je souhaite en savoir plus.
