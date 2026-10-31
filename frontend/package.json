@@ -1,0 +1,26 @@
+{
+  "name": "abidjangym-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "lint": "eslint . && prettier --check app.vue nuxt.config.ts eslint.config.mjs vitest.config.ts tsconfig.json assets/css/main.css components layouts pages tests package.json README.md",
+    "test": "vitest run",
+    "postinstall": "nuxt prepare"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/test-utils": "^2.5.1",
+    "eslint": "^10.14.0",
+    "happy-dom": "^21.0.4",
+    "nuxt": "^3.21.11",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}
