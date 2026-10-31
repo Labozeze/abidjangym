@@ -41,3 +41,5 @@
 - **Choix de protection :** tous les outils utilisent le même compte GitHub. Une approbation obligatoire bloquerait donc toutes les PR, puisqu'on ne peut pas approuver la sienne. Les protections exigent une PR et des checks verts, mais pas d'approbation formelle. La relecture se fait par commentaires (Benjamin, Valère). *(Source : configuration des protections, 31/10)*
 - **[Entité C — Benjamin]** `AGENTS.md` commun, briefs de Codex et de DeepSeek, 13 tickets du sprint 0 (#1 à #13). *(Source : tickets #1 à #13)*
 - **[Entité C — Valère]** Stratégie de tests v1.0. *(Source : ticket #4)*
+- **Première livraison par PR (#14).** La CI est verte (secrets, périmètre). Comme prévu, l'ouverture automatique de la PR a échoué à cause du réglage de l'organisation : la PR a été ouverte à la main. Claude n'a pas pu la merger lui-même, car le garde-fou de son environnement interdit de merger sans relecture humaine. Le merge revient donc à Rufin. *(Source : PR #14, 31/10)*
+- **[Entité C — Eric]** Dossiers de travail créés : `abidjangym-front` (Codex) et `default-workspace\abidjangym-back` (DeepSeek), tous deux sur `develop`. *(Source : ticket #2)*
