@@ -28,3 +28,18 @@
 
 ### Citation
 - *(aucune pour l'instant : toute citation de Rufin demande son accord)*
+
+---
+
+## Sprint 0 — semaine du 31/10/2026 (en cours)
+
+### Jour 1 — 31/10
+- **Feu vert de Rufin** pour publier les documents sur le dépôt public et lancer le sprint 0. *(Source : message de Rufin, 31/10)*
+- **Constat au démarrage :** le dépôt `Labozeze/abidjangym` existait déjà sur GitHub (créé le 29/10), public et vide. *(Source : vérification `gh`, 31/10)*
+- **[Entité C — Eric]** Premier commit, branches `main` et `develop` (develop par défaut), protections des deux branches (PR obligatoire, checks `secrets` et `perimetre`, règles appliquées aussi aux administrateurs), secret scanning et push protection, 17 étiquettes, tableau GitHub Projects à 6 colonnes, CI de base et workflow de PR automatique. *(Source : commits `fec4a88`, `dc79bf4`)*
+- **Contrainte découverte :** l'organisation `Labozeze` interdit à GitHub Actions de créer des PR. L'ouverture automatique des PR, prévue pour DeepSeek, est donc bloquée tant que Rufin n'a pas modifié ce réglage. *(Source : réponse de l'API GitHub, 31/10, ticket #13)*
+- **Choix de protection :** tous les outils utilisent le même compte GitHub. Une approbation obligatoire bloquerait donc toutes les PR, puisqu'on ne peut pas approuver la sienne. Les protections exigent une PR et des checks verts, mais pas d'approbation formelle. La relecture se fait par commentaires (Benjamin, Valère). *(Source : configuration des protections, 31/10)*
+- **[Entité C — Benjamin]** `AGENTS.md` commun, briefs de Codex et de DeepSeek, 13 tickets du sprint 0 (#1 à #13). *(Source : tickets #1 à #13)*
+- **[Entité C — Valère]** Stratégie de tests v1.0. *(Source : ticket #4)*
+- **Première livraison par PR (#14).** La CI est verte (secrets, périmètre). Comme prévu, l'ouverture automatique de la PR a échoué à cause du réglage de l'organisation : la PR a été ouverte à la main. Claude n'a pas pu la merger lui-même, car le garde-fou de son environnement interdit de merger sans relecture humaine. Le merge revient donc à Rufin. *(Source : PR #14, 31/10)*
+- **[Entité C — Eric]** Dossiers de travail créés : `abidjangym-front` (Codex) et `default-workspace\abidjangym-back` (DeepSeek), tous deux sur `develop`. *(Source : ticket #2)*
