@@ -1,4 +1,4 @@
-# Contrat d'API AbidjanGym — v0.1
+# Contrat d'API AbidjanGym — v0.2
 
 **Statut : brouillon soumis à la validation de Rufin** (CDC §2.5.4.b, point de contrôle 2).
 Aucune implémentation backend ne démarre avant cette validation.
@@ -6,9 +6,10 @@ Aucune implémentation backend ne démarre avant cette validation.
 | Élément | Valeur |
 |---|---|
 | Fichier de référence | [`openapi.yaml`](openapi.yaml) — OpenAPI 3.0.3 |
-| Version du contrat | 0.1.0 |
+| Version du contrat | 0.2.0 |
 | Périmètre | `docs/api/` (Entité B) |
 | Ticket | #9 — Contrat d'API v0.1 |
+| Relecture | PR #20 — commentaires de l'Entité C (Eric, Benjamin, Valère) intégrés, arbitrages de Rufin du 01/11/2026 appliqués |
 | Références | CDC §4.1.4, §4.1.5, §4.2, §6.2, §6.3, §6.4, §7.2, §10 |
 
 Ce README est la **synthèse lisible** du contrat. En cas de divergence, `openapi.yaml` fait foi.
@@ -17,14 +18,15 @@ Ce README est la **synthèse lisible** du contrat. En cas de divergence, `openap
 
 ## 1. Ce que couvre le contrat
 
-**62 opérations** réparties en onze domaines. Tous les flux du CDC §10 sont réalisables
+**66 opérations** réparties en douze domaines. Tous les flux du CDC §10 sont réalisables
 (voir le tableau de correspondance en §4).
 
 | Domaine | Opérations | Contenu |
 |---|---:|---|
 | Santé | 1 | `GET /health` pour le déploiement et le monitoring |
 | Authentification | 6 | connexion, rafraîchissement, déconnexion, mot de passe oublié, réinitialisation, utilisateur courant |
-| Salles | 6 | onboarding `POST /gyms`, profil de la salle, logo, bannières |
+| Utilisateurs | 3 | gestion des caissiers : liste, création avec invitation, modification et désactivation |
+| Salles | 7 | onboarding `POST /gyms`, profil, logo, bannières, signature de reçu |
 | Plans | 6 | CRUD complet, archivage, réordonnancement |
 | Abonnés | 14 | CRUD, recherche, filtres, export CSV, QR code (téléchargement, régénération, renvoi), historiques |
 | Abonnements | 6 | création, détail, renouvellement, suspension, réactivation |
@@ -40,7 +42,8 @@ Ce README est la **synthèse lisible** du contrat. En cas de divergence, `openap
 
 **Base URL :** `https://api.abidjangym.com/api/v1` (CDC §7.2).
 
-**Authentification** — deux mécanismes, décrits dans le contrat :
+**Authentification** — trois schémas, décrits dans le contrat. Le mécanisme retenu est
+**Laravel Sanctum** (jetons opaques), conformément à la décision du 01/11/2026 :
 
 | Schéma | Usage | Transport |
 |---|---|---|
@@ -48,9 +51,17 @@ Ce README est la **synthèse lisible** du contrat. En cas de divergence, `openap
 | `BearerAuth` | API, clients tiers, intégrations | `Authorization: Bearer <jeton>` |
 | `MemberBearer` | espace abonné | `Authorization: Bearer <jeton>` (portée limitée au membre) |
 
-Jeton d'accès **1 h**, jeton de rafraîchissement **30 jours** (CDC §6.2). Les routes publiques
-sont explicitement marquées `security: []` : santé, connexion, rafraîchissement, mot de passe
-oublié, réinitialisation, onboarding, callbacks de paiement, lien magique, contact.
+**Sessions (décision du 01/11/2026).** Jeton d'accès **1 h**, rafraîchi automatiquement tant
+qu'il y a de l'activité, session **plafonnée à 8 h**. Option « se souvenir de cet appareil » :
+rafraîchissement possible jusqu'à **30 jours**.
+
+**Rôles.** `admin` (gérant : accès complet à sa salle) et `cashier` (caissier : abonnés en
+lecture/création, paiements, reçus, scan — sans rapports, paramètres, suppression, ni
+modification de paiement). Le rôle plateforme « Super Admin » est hors v0.1 (voir §8).
+
+**Routes publiques.** Marquees `security: []` : santé, connexion, rafraîchissement, mot de passe
+oublié, réinitialisation, onboarding, callbacks de paiement, lien magique, contact — soit 10 des
+66 opérations.
 
 **Multi-tenant (CDC §6.3).** Le tenant est déduit du jeton, jamais d'un paramètre. Toute
 ressource d'une autre salle répond **`404`** et non `403` : un gérant ne doit pas pouvoir
@@ -61,12 +72,13 @@ déduire l'existence d'un abonné d'une autre salle.
 **Dates.** ISO 8601 avec fuseau ; fuseau par défaut `Africa/Abidjan` (GMT+0). Les dates
 « métier » (début/fin d'abonnement) sont des `date` sans heure.
 
-**Pagination.** `?page=&per_page=` (défaut 20, maximum 100), enveloppe
-`{ data, meta, links }`. Le CDC §7.2 évoque du *cursor-based* pour les très grandes listes :
-l'offset est retenu en v0.1, à revoir si les volumes l'exigent.
+**Pagination (décision du 01/11/2026).** Offset : `?page=&per_page=`, défaut 20, **maximum 100**,
+enveloppe `{ data, meta, links }`. Le cursor-based évoqué au CDC §7.2 n'est pas retenu pour la v1.
 
 **Erreurs.** Format unique `{ "message": "...", "errors": {} }`, messages en français.
 Codes employés : `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`, `503`.
+Les routes publiques à jeton (`/auth/refresh`, `/auth/reset-password`,
+`/member/auth/magic-link/verify`) déclarent `429` : ce sont des cibles de force brute (CDC §6.4).
 
 **Statuts calculés.** Les états d'abonné du CDC (Actif, Expire bientôt, Expiré, Suspendu,
 Nouveau) sont exposés en enum anglais `active`, `expiring_soon`, `expired`, `suspended`,
@@ -82,11 +94,22 @@ Nouveau) sont exposés en enum anglais `active`, `expiring_soon`, `expired`, `su
 |---|---|---|
 | GET | `/health` | état de l'API et de la base (public) |
 | POST | `/auth/login` | connexion backoffice, pose le cookie, renvoie le jeton |
-| POST | `/auth/refresh` | nouveau jeton d'accès |
-| POST | `/auth/logout` | révocation du jeton (liste noire, CDC §6.2) |
+| POST | `/auth/refresh` | nouveau jeton d'accès (plafond de session 8 h) |
+| POST | `/auth/logout` | révocation du jeton (CDC §6.2) |
 | POST | `/auth/forgot-password` | envoi d'un lien valable 1 h |
 | POST | `/auth/reset-password` | nouveau mot de passe (8 car., 1 maj., 1 chiffre) |
 | GET | `/auth/me` | utilisateur, rôle et salle courants |
+
+### Utilisateurs (gestion des caissiers, CDC §4.2.10)
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| GET | `/users` | liste des comptes de la salle (gérant et caissiers), filtres rôle/actif |
+| POST | `/users` | création d'un compte + email d'invitation (lien 1 h, usage unique) |
+| PATCH | `/users/{userId}` | identité, email, rôle, activation/désactivation |
+
+Réservé au gérant. Un gérant ne peut ni désactiver son propre compte, ni retirer son propre
+rôle `admin` : la salle se retrouverait sans administrateur (`422`).
 
 ### Salles
 
@@ -94,10 +117,11 @@ Nouveau) sont exposés en enum anglais `active`, `expiring_soon`, `expired`, `su
 |---|---|---|
 | POST | `/gyms` | onboarding complet : salle + admin + plan SaaS (public) |
 | GET | `/gyms/current` | fiche complète de la salle |
-| PATCH | `/gyms/current` | modification partielle du profil |
+| PATCH | `/gyms/current` | modification partielle du profil (dont la personnalisation du reçu) |
 | POST | `/gyms/current/logo` | logo PNG/JPG, 2 Mo max, 300×300 |
 | POST | `/gyms/current/banners` | bannière (3 maximum) |
 | DELETE | `/gyms/current/banners/{bannerId}` | suppression d'une bannière |
+| POST | `/gyms/current/receipt-signature` | signature ou cachet apposé sur les reçus |
 
 ### Plans
 
@@ -149,7 +173,7 @@ Nouveau) sont exposés en enum anglais `active`, `expiring_soon`, `expired`, `su
 | GET | `/payments/export` | export CSV comptable |
 | POST | `/payments/callback/{provider}` | callback prestataire : `orange`, `mtn`, `wave`, `cinetpay` (public, signé) |
 | GET | `/payments/{paymentId}` | détail |
-| PATCH | `/payments/{paymentId}` | correction des notes, référence, date |
+| PATCH | `/payments/{paymentId}` | correction des notes, référence, date — **gérant uniquement** (caissier : `403`) |
 | POST | `/payments/{paymentId}/confirm` | confirmation d'un virement ou chèque |
 | POST | `/payments/{paymentId}/cancel` | annulation motivée |
 | POST | `/payments/{paymentId}/proof` | justificatif, 5 Mo max |
@@ -164,12 +188,18 @@ Nouveau) sont exposés en enum anglais `active`, `expiring_soon`, `expired`, `su
 | GET | `/entries` | historique des entrées (période, abonné, caissier) |
 | GET | `/dashboard` | abonnés actifs, revenus du jour, entrées, expirations, 2 graphiques, 5 derniers paiements, alertes |
 
+> **Attention sur `GET /access/{uuid}`.** Ce `GET` a un effet de bord : un scan accepté crée un
+> passage. Le CDC §10.4 impose ce verbe, mais l'appel doit être déclenché **par l'action de
+> scan** de l'application — jamais par un préchargement de lien, un proxy ou un rejeu automatique
+> du navigateur, sous peine de double passage. La réponse est renvoyée avec `Cache-Control:
+> no-store`. Un passage en `POST /access/scans` est envisagé pour une prochaine version.
+
 ### Espace abonné (`member.abidjangym.com`)
 
 | Méthode | Route | Rôle |
 |---|---|---|
-| POST | `/member/auth/magic-link` | demande de lien magique (public) |
-| POST | `/member/auth/magic-link/verify` | ouverture de session (public) |
+| POST | `/member/auth/magic-link` | demande de lien magique, valable 15 min (public) |
+| POST | `/member/auth/magic-link/verify` | ouverture de session, lien à usage unique (public) |
 | GET | `/member/profile` | profil en lecture seule |
 | GET | `/member/subscription` | abonnement en cours, jours restants |
 | GET | `/member/subscriptions` | historique |
@@ -206,12 +236,12 @@ npx @redocly/cli lint docs/api/openapi.yaml
 ```
 
 Résultat sur cette version : **« Your API description is valid. »** — 0 erreur, 6 avertissements
-assumés et expliqués :
+assumés :
 
-| Avertissement | Pourquoi il est accepté |
+| Avertissement | Décision |
 |---|---|
-| `no-server-example.com` (serveur `localhost`) | le serveur de développement est décrit volontairement, pour l'Entité A et le front |
-| `no-ambiguous-paths` ×4 | `POST /payments/callback/{provider}` (URL imposée par le CDC §10.5) peut théoriquement être confondu avec `/payments/{paymentId}/…` par un générateur de SDK. À trancher : conserver l'URL du CDC, ou renommer en `/payment-callbacks/{provider}` |
+| `no-server-example.com` (serveur `localhost`) | conservé : le serveur de développement est décrit volontairement, pour l'Entité A et le front |
+| `no-ambiguous-paths` ×4 | conservé : l'URL du CDC §10.5 fait foi (arbitrage d'Eric). Côté Laravel, `{paymentId}` doit être contraint (`whereNumber`) et la route de callback déclarée en premier |
 | `operation-4xx-response` sur `/health` | un endpoint de supervision ne renvoie pas d'erreur 4xx par nature |
 
 Le fichier se visualise aussi dans Swagger Editor (`editor.swagger.io`) ou avec :
@@ -222,24 +252,20 @@ npx @redocly/cli preview-docs docs/api/openapi.yaml
 
 ---
 
-## 6. Points à trancher par Rufin
+## 6. Décisions actées (01/11/2026)
 
-Ces points ne sont pas des oublis : le CDC est soit silencieux, soit contradictoire, et la
-règle « aucun fait inventé » impose de les remonter plutôt que de choisir seul.
+Arbitrées par Rufin à l'issue de la relecture de la v0.1, sur recommandation de Benjamin
+(Entité C). Elles s'imposent au contrat et à l'implémentation.
 
-1. **JWT ou Sanctum ?** Le CDC §6.2 décrit des jetons JWT (accès 1 h + rafraîchissement 30 j) ;
-   `backend/AGENTS.md` impose Laravel Sanctum. Le contrat décrit le comportement attendu
-   (jeton en cookie httpOnly + Bearer), pas la technique. À confirmer : Sanctum avec jetons
-   opaques, ou JWT signés ?
-2. **Durée de session.** CDC §4.2.1 : « 8 h » ; CDC §6.2 : accès 1 h + rafraîchissement 30 j.
-   Proposition retenue : jeton d'accès 1 h rafraîchi tant qu'il y a de l'activité, session
-   plafonnée à 8 h sauf case « se souvenir de cet appareil ».
-3. **Durée du lien magique abonné.** Non spécifiée. Proposition : 15 minutes.
-4. **Pagination.** Offset (proposé) ou cursor-based comme suggéré au CDC §7.2 ?
-5. **`per_page` maximum.** Fixé à 100 ; à ajuster selon les limites Hostinger.
-6. **Reçu personnalisable.** QR code optionnel et image de signature/cachet (CDC §4.2.8) :
-   qui les active — le gérant dans les paramètres, ou l'équipe AbidjanGym ?
-7. **Nom du chemin de callback.** Voir l'avertissement `no-ambiguous-paths` ci-dessus.
+| # | Question | Décision |
+|---|---|---|
+| 1 | JWT ou Sanctum | **Laravel Sanctum**, jetons opaques. Comportement inchangé : 1 h, cookie `httpOnly` pour le backoffice, Bearer pour l'API |
+| 2 | Durée de session | Jeton **1 h** rafraîchi tant qu'il y a de l'activité, session **plafonnée à 8 h** ; « se souvenir de cet appareil » → jusqu'à **30 jours** |
+| 3 | Lien magique abonné | **15 minutes**, usage unique |
+| 4 | Pagination | **Offset** (`?page=&per_page=`) pour la v1 |
+| 5 | `per_page` maximum | **100** (défaut 20) |
+| 6 | Reçu personnalisable | Tranché par le CDC §4.2.8 : c'est le **gérant** qui configure le QR code et la signature/cachet, désormais exposés via `receipt` dans `PATCH /gyms/current` et `POST /gyms/current/receipt-signature` |
+| 7 | Chemin du callback | URL du CDC §10.5 **conservée**, `{paymentId}` contraint côté routes Laravel |
 
 ---
 
@@ -252,16 +278,17 @@ Aucune valeur réelle n'a été inventée (AGENTS.md §5.3). À fournir par Rufi
 | En-tête et algorithme de signature des callbacks Orange Money, MTN MoMo, Wave, CinetPay | `POST /payments/callback/{provider}` |
 | Charge utile exacte de chaque prestataire | schéma du corps du callback |
 | Identifiants API des prestataires (chiffrés AES-256 en base, CDC §6.6) | configuration salle, hors contrat |
-| SMTP sortant pour les emails transactionnels et le formulaire de contact | `POST /contact-messages`, `POST /auth/forgot-password` |
+| SMTP sortant pour les emails transactionnels et les invitations | `POST /contact-messages`, `POST /auth/forgot-password`, `POST /users` |
 | Fournisseur WhatsApp Business et SMS (Twilio, 360dialog, Infobip…) | notifications, hors v0.1 |
 | Adresse email de contact technique | `info.contact.email` |
+| Taille maximale de l'image de signature du reçu (proposition : 1 Mo) | `POST /gyms/current/receipt-signature` |
 | Profondeur d'historique conservée pour les graphiques du tableau de bord | `GET /dashboard` |
 
 ---
 
 ## 8. Hors périmètre de la v0.1
 
-Ces éléments du CDC existent mais ne sont pas contractualisés ici ; ils relèvent d'une v0.2,
+Ces éléments du CDC existent mais ne sont pas contractualisés ici ; ils relèvent d'une v0.3,
 dès que les flux principaux sont validés :
 
 - configuration et journal des notifications (CDC §4.2.7) ;
@@ -269,7 +296,8 @@ dès que les flux principaux sont validés :
 - back-office **Super Admin** de la plateforme (CDC §4.2.10 : salles, MRR, plans SaaS) ;
 - webhook domotique après scan (CDC §4.2.9) ;
 - actions groupées sur les abonnés (notification, suspension, archivage en masse) ;
-- régénération du QR par l'abonné lui-même.
+- régénération du QR par l'abonné lui-même ;
+- évolution `POST /access/scans` en remplacement du `GET` à effet de bord.
 
 ---
 
@@ -278,3 +306,4 @@ dès que les flux principaux sont validés :
 | Version | Date | Auteur | Changements |
 |---|---|---|---|
 | 0.1.0 | 31 oct. 2026 | Entité B (DeepSeek), ticket #9 | Version initiale : 62 opérations, schémas, sécurité, erreurs, pagination |
+| 0.2.0 | 01 nov. 2026 | Entité B (DeepSeek), relecture PR #20 | Arbitrages de Rufin intégrés (Sanctum, session 8 h, lien magique 15 min, offset, `per_page` 100, reçu par le gérant, callback conservé) ; ajout de la gestion des caissiers (`/users`) ; `429` sur les routes publiques à jeton ; `403` caissier sur `PATCH /payments/{paymentId}` ; avertissement sur le `GET /access/{uuid}` ; 66 opérations |

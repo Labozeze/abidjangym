@@ -12,7 +12,7 @@ openapi: 3.0.3
 
 info:
   title: API AbidjanGym
-  version: 0.1.0
+  version: 0.2.0
   description: |
     API REST de la plateforme SaaS multi-tenant **AbidjanGym** (gestion de salles de sport,
     Côte d'Ivoire). Elle sert le backoffice gérant/caissier (`app.abidjangym.com`), l'espace
@@ -40,6 +40,18 @@ info:
 
     Les routes marquées `security: []` sont publiques (santé, connexion, onboarding, contact,
     callbacks de paiement, consommation d'un lien magique).
+
+    ## Décisions actées (01/11/2026)
+    Arbitrées par Rufin après la relecture de la v0.1 (détail dans `docs/api/README.md` §6) :
+    - authentification **Laravel Sanctum** (jetons opaques) ; jeton d'accès de 1 h rafraîchi
+      tant qu'il y a de l'activité, session plafonnée à **8 h**, option « se souvenir de cet
+      appareil » jusqu'à **30 jours** ;
+    - lien magique de l'abonné valable **15 minutes**, à usage unique ;
+    - pagination **offset** (`?page=&per_page=`), `per_page` maximal **100** ;
+    - reçu personnalisable configuré **par le gérant** dans les paramètres de la salle
+      (QR code optionnel, signature ou cachet, message de pied de page) ;
+    - chemin de callback du CDC §10.5 conservé (`/payments/callback/{provider}`), avec
+      `{paymentId}` contraint au format numérique côté routeur Laravel.
 
     ## Valeurs non disponibles
     Les identifiants réels des prestataires (Orange Money, MTN MoMo, Wave, CinetPay,
@@ -70,6 +82,8 @@ tags:
     description: Onboarding d'une salle et profil de la salle courante.
   - name: Plans
     description: Types d'abonnement vendus par une salle (mensuel, hebdomadaire, journalier, pack).
+  - name: Utilisateurs
+    description: Comptes du gérant et des caissiers d'une salle (CDC §4.2.10).
   - name: Abonnés
     description: Membres d'une salle, recherche, QR code et historiques.
   - name: Abonnements
@@ -170,7 +184,9 @@ paths:
                 remember_device:
                   type: boolean
                   default: false
-                  description: Prolonge la session au-delà de 8 h (CDC §4.2.1) — `[À FOURNIR]` durée exacte.
+                  description: |
+                    Prolonge la session au-delà du plafond de 8 h, jusqu'à 30 jours
+                    (décision du 01/11/2026, CDC §6.2).
       responses:
         '200':
           description: Connexion réussie.
@@ -196,8 +212,9 @@ paths:
                   refresh_token:
                     type: string
                     description: |
-                      Jeton de rafraîchissement (30 j, CDC §6.2). En cookie httpOnly pour le
-                      backoffice ; `[À FOURNIR]` — exposition au client non tranchée.
+                      Jeton de rafraîchissement Sanctum (opaque), valable jusqu'à 30 jours avec
+                      l'option « se souvenir de cet appareil ». Pour le backoffice, il est
+                      transmis en cookie `httpOnly` et absent du corps de la réponse.
                   expires_in:
                     type: integer
                     description: Durée de vie du jeton d'accès, en secondes.
@@ -216,8 +233,9 @@ paths:
       summary: Rafraîchir le jeton d'accès
       description: |
         Émet un nouveau jeton d'accès à partir du jeton de rafraîchissement valide
-        (cookie httpOnly ou corps). La session est prolongée automatiquement en cas d'activité
-        (CDC §4.2.1).
+        (cookie httpOnly ou corps). La session est prolongée automatiquement en cas d'activité,
+        sans dépasser le plafond de **8 h** — sauf option « se souvenir de cet appareil »,
+        qui autorise un rafraîchissement jusqu'à **30 jours** (décision du 01/11/2026).
       security: []
       requestBody:
         required: false
@@ -248,6 +266,8 @@ paths:
                     example: 3600
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /auth/logout:
     post:
@@ -331,6 +351,8 @@ paths:
           description: Mot de passe modifié ; tous les jetons existants sont révoqués.
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /auth/me:
     get:
@@ -351,6 +373,131 @@ paths:
                     $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  # ---------------------------------------------------------------------------
+  # Utilisateurs de la salle (gérant et caissiers)
+  # ---------------------------------------------------------------------------
+  /users:
+    get:
+      operationId: listUsers
+      tags: [Utilisateurs]
+      summary: Lister les utilisateurs de la salle
+      description: |
+        Comptes du gérant et des caissiers de la salle courante (CDC §4.2.10, « Gestion des
+        caissiers »). **Réservé au gérant** : un caissier reçoit `403`.
+      parameters:
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: is_active
+          in: query
+          description: Filtre sur les comptes actifs ou désactivés.
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          description: Recherche sur prénom, nom ou email.
+          schema:
+            type: string
+            maxLength: 100
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Liste paginée des utilisateurs de la salle.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createUser
+      tags: [Utilisateurs]
+      summary: Créer un caissier
+      description: |
+        Crée un compte dans la salle courante et envoie un **lien de définition du mot de passe**
+        par email — lien à usage unique, valable 1 h (même politique que la réinitialisation,
+        CDC §6.2). Aucun mot de passe n'est transmis dans la requête.
+
+        **Réservé au gérant.** La création d'un second compte `admin` est autorisée mais
+        déconseillée : le CDC §4.2.10 ne prévoit qu'un gérant par salle.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: Compte créé, invitation envoyée (asynchrone).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: Le compte a été créé. Un email d'invitation a été envoyé.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /users/{userId}:
+    patch:
+      operationId: updateUser
+      tags: [Utilisateurs]
+      summary: Modifier ou désactiver un utilisateur
+      description: |
+        Modification partielle : identité, email, rôle, et activation/désactivation via
+        `is_active` (CDC §4.2.10, « créer et désactiver des comptes caissier »). Un compte
+        désactivé ne peut plus se connecter ; ses jetons sont révoqués immédiatement.
+
+        **Réservé au gérant.** Garde-fous (`422`) : un gérant ne peut ni désactiver son propre
+        compte, ni retirer son propre rôle `admin` — la salle se retrouverait sans administrateur.
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Compte mis à jour.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   # ---------------------------------------------------------------------------
   # Salles (tenants)
@@ -558,6 +705,51 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /gyms/current/receipt-signature:
+    post:
+      operationId: uploadReceiptSignature
+      tags: [Salles]
+      summary: Téléverser la signature ou le cachet du reçu
+      description: |
+        Image apposée sur les reçus (CDC §4.2.8, « signature/cachet : image uploadable par le
+        gérant ») — décision du 01/11/2026 : c'est le gérant qui la configure. PNG ou JPG.
+
+        `[À FOURNIR]` — taille maximale du fichier (proposition : 1 Mo) et dimensions de
+        redimensionnement, à confirmer par Rufin.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [signature]
+              properties:
+                signature:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Signature enregistrée.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [signature_url]
+                    properties:
+                      signature_url:
+                        type: string
+                        format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   # ---------------------------------------------------------------------------
   # Plans d'abonnement
@@ -1709,6 +1901,9 @@ paths:
         Correction d'un paiement existant : notes internes, référence externe, date.
         Le montant et le mode d'un paiement **confirmé** ne sont pas modifiables : il faut
         l'annuler et le recréer, afin de préserver la piste d'audit (CDC §6.6).
+
+        **Réservé au gérant** : le CDC §4.2.10 donne au caissier la seule capacité d'*enregistrer*
+        un paiement et d'imprimer un reçu, pas de le modifier. Le caissier reçoit donc `403`.
       parameters:
         - $ref: '#/components/parameters/PaymentId'
       requestBody:
@@ -1740,6 +1935,8 @@ paths:
                     $ref: '#/components/schemas/Payment'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
@@ -1939,6 +2136,13 @@ paths:
         Un UUID inconnu, révoqué (QR régénéré) ou appartenant à une autre salle renvoie `404` :
         l'interface doit l'afficher comme « QR invalide » (CDC §4.2.9). Ce choix évite de
         révéler l'existence d'un abonné d'une autre salle.
+
+        ⚠️ **Effet de bord.** Un scan accepté crée un passage : ce `GET` modifie donc des
+        données. Le CDC §10.4 impose ce verbe, mais l'appel doit être déclenché **par l'action de
+        scan** de l'application — jamais par un préchargement de lien, un proxy, un robot
+        d'indexation ou un rejeu automatique du navigateur, sous peine de double passage. La
+        réponse est renvoyée avec `Cache-Control: no-store`. Une évolution en `POST /access/scans`
+        est envisagée pour une prochaine version.
       parameters:
         - name: uuid
           in: path
@@ -2066,8 +2270,7 @@ paths:
         Connexion de l'abonné par lien magique (CDC §4.1.5), envoyé par WhatsApp ou email.
         La réponse est identique que l'adresse existe ou non, pour ne pas révéler les comptes.
 
-        `[À FOURNIR]` — durée de validité du lien magique (proposition : 15 min, à trancher
-        avec Rufin, la politique de réinitialisation du CDC §6.2 étant de 1 h).
+        Le lien est valable **15 minutes** et à **usage unique** (décision du 01/11/2026).
       security: []
       requestBody:
         required: true
@@ -2136,6 +2339,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /member/profile:
     get:
@@ -2414,6 +2619,14 @@ components:
       schema:
         type: integer
         format: int64
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: Identifiant de l'utilisateur (gérant ou caissier).
+      schema:
+        type: integer
+        format: int64
 
   responses:
     Unauthorized:
@@ -2614,8 +2827,14 @@ components:
 
     UserRole:
       type: string
-      description: Rôles du CDC §4.2.10.
-      enum: [gym_admin, cashier, super_admin]
+      description: |
+        Rôles d'une salle (CDC §4.2.10) :
+        - `admin` → gérant : accès complet à sa salle (rapports, paramètres, caissiers) ;
+        - `cashier` → caissier : abonnés en lecture et création, enregistrement des paiements,
+          impression des reçus, scan — sans rapports, paramètres ni suppression.
+
+        Le rôle plateforme « Super Admin » n'est pas exposé en v0.1 (voir README §8).
+      enum: [admin, cashier]
 
     # --- Utilisateurs ----------------------------------------------------------
     User:
@@ -2657,6 +2876,46 @@ components:
           type: string
         last_name:
           type: string
+
+    UserInput:
+      type: object
+      description: Création d'un compte dans la salle (CDC §4.2.10).
+      required: [first_name, last_name, email, role]
+      properties:
+        first_name:
+          type: string
+          maxLength: 60
+        last_name:
+          type: string
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          description: Adresse d'invitation ; unique dans la salle.
+          example: caissier@example.com
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    UserUpdate:
+      type: object
+      description: Modification partielle d'un compte ; tous les champs sont facultatifs.
+      properties:
+        first_name:
+          type: string
+          maxLength: 60
+        last_name:
+          type: string
+          maxLength: 60
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+        is_active:
+          type: boolean
+          description: |
+            `false` désactive le compte et révoque immédiatement ses jetons ; `true` le réactive.
+            Un gérant ne peut pas désactiver son propre compte.
 
     # --- Salles ----------------------------------------------------------------
     GymRegistration:
@@ -2778,6 +3037,31 @@ components:
           type: integer
           description: Ordre d'affichage, de 1 à 3.
 
+    ReceiptSettings:
+      type: object
+      description: |
+        Personnalisation du reçu (CDC §4.2.8), configurée **par le gérant** dans les paramètres
+        de la salle — décision du 01/11/2026. Le CDC §4.2.8 prévoit explicitement que le QR code
+        est « configurable par le gérant » et que la signature/cachet est une « image uploadable
+        par le gérant ».
+      properties:
+        footer_message:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: Message de pied de page du reçu.
+          example: Merci de votre confiance !
+        include_qr:
+          type: boolean
+          default: false
+          description: Ajoute le QR code de l'abonné sur le reçu (optionnel).
+        signature_url:
+          type: string
+          format: uri
+          nullable: true
+          description: |
+            Image de signature ou de cachet, téléversée par le gérant. `null` si aucune.
+
     Gym:
       type: object
       description: Fiche complète de la salle (CDC §4.2.3).
@@ -2829,6 +3113,8 @@ components:
           maxItems: 3
           items:
             $ref: '#/components/schemas/GymBanner'
+        receipt:
+          $ref: '#/components/schemas/ReceiptSettings'
         social_links:
           $ref: '#/components/schemas/SocialLinks'
         timezone:
@@ -2892,6 +3178,8 @@ components:
           $ref: '#/components/schemas/SocialLinks'
         timezone:
           type: string
+        receipt:
+          $ref: '#/components/schemas/ReceiptSettings'
         welcome_message:
           type: string
           maxLength: 500
