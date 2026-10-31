@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>AbidjanGym — Gérez votre salle de sport</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,700;0,800;0,900;1,800;1,900&family=DM+Sans:wght@400;500&display=swap">
+<style>
+/* ── TOKENS ──────────────────────────────────────────────────────── */
+:root {
+  --bg:         #FFFFFF;
+  --bg-2:       #F5F7FB;
+  --bg-3:       #EEF1F8;
+  --surface:    #FFFFFF;
+  --border:     #E2E8F0;
+  --fg:         #0A0D14;
+  --fg-2:       #3D4A60;
+  --fg-3:       #7A8AA0;
+  --accent:     #FF5A1E;
+  --accent-h:   #E84A10;
+  --accent-soft:rgba(255,90,30,.09);
+  --accent-glow:rgba(255,90,30,.25);
+  --ok:         #16A34A;
+  --ok-bg:      rgba(22,163,74,.09);
+  --warn-bg:    rgba(234,179,8,.1);
+  --warn:       #B45309;
+  --bad-bg:     rgba(239,68,68,.09);
+  --bad:        #DC2626;
+  --fd: 'Plus Jakarta Sans', sans-serif;
+  --fb: 'DM Sans', sans-serif;
+  --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+html { scroll-behavior: smooth }
+body {
+  font-family: var(--fb);
+  background: var(--bg);
+  color: var(--fg);
+  overflow-x: hidden;
+}
+img { max-width: 100% }
+a { text-decoration: none }
+
+/* ── SCROLL ANIMATIONS ──────────────────────────────────────────── */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity .65s var(--ease), transform .65s var(--ease);
+}
+.reveal.in { opacity: 1; transform: none }
+.reveal-l {
+  opacity: 0; transform: translateX(-36px);
+  transition: opacity .65s var(--ease), transform .65s var(--ease);
+}
+.reveal-l.in { opacity: 1; transform: none }
+.reveal-r {
+  opacity: 0; transform: translateX(36px);
+  transition: opacity .65s var(--ease), transform .65s var(--ease);
+}
+.reveal-r.in { opacity: 1; transform: none }
+.stagger .reveal:nth-child(1){ transition-delay:.0s }
+.stagger .reveal:nth-child(2){ transition-delay:.1s }
+.stagger .reveal:nth-child(3){ transition-delay:.2s }
+.stagger .reveal:nth-child(4){ transition-delay:.3s }
+.stagger .reveal:nth-child(5){ transition-delay:.4s }
+.stagger .reveal:nth-child(6){ transition-delay:.5s }
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  padding: 0 max(24px, env(safe-area-inset-left,0px));
+  transition: background .3s, box-shadow .3s, border-color .3s;
+  border-bottom: 1px solid transparent;
+}
+nav.scrolled {
+  background: rgba(255,255,255,.93);
+  backdrop-filter: blur(16px);
+  border-color: var(--border);
+  box-shadow: 0 2px 16px rgba(0,0,0,.06);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 68px; gap: 16px;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px }
+.logo-mark {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--accent); display: grid; place-items: center;
+  transition: transform .2s; flex-shrink: 0;
+}
+.logo-mark:hover { transform: scale(1.08) rotate(-3deg) }
+.logo-name {
+  font-family: var(--fd); font-size: 18px; font-weight: 900;
+  color: var(--fg); letter-spacing: -.01em;
+}
+.logo-name em { color: var(--accent); font-style: normal }
+.nav-links { display: flex; gap: 32px }
+.nav-links a {
+  font-size: 13px; font-weight: 700; color: var(--fg-2);
+  letter-spacing: .02em; text-transform: uppercase;
+  transition: color .2s; position: relative; padding-bottom: 3px;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 100%;
+  height: 2px; background: var(--accent);
+  transition: right .25s var(--ease);
+}
+.nav-links a:hover { color: var(--fg) }
+.nav-links a:hover::after { right: 0 }
+.nav-cta { display: flex; gap: 10px; align-items: center }
+.btn-ghost-nav {
+  padding: 9px 20px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-family: var(--fd); font-size: 12px; font-weight: 700;
+  color: var(--fg-2); background: transparent; cursor: pointer;
+  letter-spacing: .04em; text-transform: uppercase; transition: all .2s;
+}
+.btn-ghost-nav:hover { border-color: var(--accent); color: var(--accent) }
+.btn-accent-nav {
+  padding: 9px 22px; border: none; border-radius: 8px;
+  font-family: var(--fd); font-size: 12px; font-weight: 800;
+  background: var(--accent); color: white; cursor: pointer;
+  letter-spacing: .04em; text-transform: uppercase;
+  transition: background .2s, box-shadow .2s, transform .1s;
+}
+.btn-accent-nav:hover {
+  background: var(--accent-h);
+  box-shadow: 0 4px 18px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+/* ── HERO ────────────────────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex; align-items: center;
+  position: relative; overflow: hidden;
+  padding: 0 max(24px, env(safe-area-inset-left,0px));
+}
+/* Decorative shapes */
+.hero-shape-1 {
+  position: absolute; right: -80px; top: -80px;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,90,30,.08) 0%, transparent 70%);
+  pointer-events: none;
+  animation: shape-drift 8s ease-in-out infinite;
+}
+.hero-shape-2 {
+  position: absolute; left: -100px; bottom: -60px;
+  width: 400px; height: 400px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,90,30,.05) 0%, transparent 70%);
+  pointer-events: none;
+  animation: shape-drift 10s ease-in-out infinite reverse;
+}
+/* Dot pattern */
+.hero-dots {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(10,13,20,.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 80% at 60% 50%, black 30%, transparent 100%);
+}
+@keyframes shape-drift {
+  0%,100% { transform: translate(0,0) scale(1) }
+  33% { transform: translate(20px,-15px) scale(1.04) }
+  66% { transform: translate(-10px,20px) scale(.97) }
+}
+/* Floating notif */
+@keyframes float {
+  0%,100% { transform: translateY(0) }
+  50% { transform: translateY(-10px) }
+}
+
+.hero-inner {
+  max-width: 1200px; margin: 0 auto; width: 100%;
+  position: relative; z-index: 1;
+  padding: 120px 0 80px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+}
+
+/* Hero text */
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border: 1.5px solid rgba(255,90,30,.3);
+  border-radius: 100px; font-family: var(--fd); font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-soft);
+  margin-bottom: 22px; animation: fadein .7s var(--ease) both;
+}
+.hero-tag::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+@keyframes fadein { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+h1 {
+  font-family: var(--fd);
+  font-size: clamp(42px, 6vw, 76px);
+  font-weight: 900;
+  font-style: italic;
+  line-height: .95;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
+  color: var(--fg);
+  margin-bottom: 24px;
+  animation: fadein .7s .08s var(--ease) both;
+}
+h1 em { color: var(--accent); font-style: italic }
+h1 .outline {
+  -webkit-text-stroke: 2px var(--accent);
+  color: transparent; display: block;
+}
+.hero-sub {
+  font-size: 16px; color: var(--fg-2); max-width: 420px;
+  line-height: 1.7; margin-bottom: 36px;
+  animation: fadein .7s .16s var(--ease) both;
+}
+.hero-btns {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  animation: fadein .7s .24s var(--ease) both;
+}
+.btn-hero-primary {
+  padding: 15px 34px; border-radius: 10px;
+  font-family: var(--fd); font-size: 14px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+  background: var(--accent); color: white; border: none;
+  display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+  box-shadow: 0 8px 28px var(--accent-glow);
+  transition: all .2s;
+}
+.btn-hero-primary:hover {
+  background: var(--accent-h);
+  box-shadow: 0 12px 36px rgba(255,90,30,.38);
+  transform: translateY(-2px);
+}
+.btn-hero-outline {
+  padding: 15px 28px; border-radius: 10px;
+  font-family: var(--fd); font-size: 14px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  background: transparent; color: var(--fg); border: 2px solid var(--border);
+  display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+  transition: all .2s;
+}
+.btn-hero-outline:hover { border-color: var(--accent); color: var(--accent) }
+
+/* ── HERO VISUAL ────────────────────────────────────────────────── */
+.hero-visual {
+  position: relative;
+  animation: fadein .7s .18s var(--ease) both;
+}
+.hero-card {
+  background: var(--bg-2);
+  border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 24px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.07);
+}
+.hc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.hc-title { font-family: var(--fd); font-size: 13px; font-weight: 700; color: var(--fg) }
+.hc-badge {
+  padding: 4px 10px; border-radius: 100px; font-size: 10px; font-weight: 700;
+  background: var(--ok-bg); color: var(--ok); letter-spacing: .04em; font-family: var(--fd);
+}
+.hc-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px }
+.hc-stat {
+  background: white; border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.hc-stat-val {
+  font-family: var(--fd); font-size: 20px; font-weight: 900;
+  line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums;
+}
+.hc-stat-lbl { font-size: 9px; color: var(--fg-3); letter-spacing: .04em; text-transform: uppercase; font-weight: 600 }
+.mini-chart { display: flex; align-items: flex-end; gap: 5px; height: 64px }
+.mc-bar { flex: 1; border-radius: 4px 4px 0 0; transition: filter .15s }
+.mc-bar:hover { filter: brightness(.85) }
+/* Floating notif */
+.hero-notif {
+  position: absolute; bottom: -18px; left: -24px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+  animation: float 4s ease-in-out infinite;
+  width: max-content; max-width: 240px;
+}
+.notif-icon {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  background: var(--ok-bg); display: grid; place-items: center; color: var(--ok);
+}
+.notif-title { font-family: var(--fd); font-size: 12px; font-weight: 700; color: var(--fg); margin-bottom: 2px }
+.notif-sub { font-size: 10px; color: var(--fg-3) }
+/* Second floating chip */
+.hero-chip {
+  position: absolute; top: -18px; right: -16px;
+  background: var(--accent); color: white;
+  border-radius: 100px; padding: 8px 16px;
+  font-family: var(--fd); font-size: 12px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+  box-shadow: 0 6px 20px var(--accent-glow);
+  animation: float 5s .5s ease-in-out infinite;
+}
+
+/* ── TICKER ──────────────────────────────────────────────────────── */
+.ticker {
+  background: var(--fg); padding: 13px 0; overflow: hidden; white-space: nowrap;
+}
+.ticker-track {
+  display: inline-flex; gap: 36px;
+  animation: ticker 28s linear infinite;
+}
+@keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.ticker-item {
+  font-family: var(--fd); font-size: 12px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; color: white;
+  display: inline-flex; align-items: center; gap: 14px; flex-shrink: 0;
+}
+.ticker-item::after { content:'●'; font-size:7px; opacity:.4 }
+
+/* ── STATS BAND ──────────────────────────────────────────────────── */
+.stats-band {
+  background: var(--accent);
+  padding: 52px max(24px, env(safe-area-inset-left,0px));
+}
+.stats-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 24px }
+.stat-item { text-align: center }
+.stat-num {
+  font-family: var(--fd); font-size: clamp(36px, 4vw, 54px); font-weight: 900;
+  font-style: italic; letter-spacing: -.02em; line-height: 1;
+  color: white; margin-bottom: 6px;
+}
+.stat-num em { color: rgba(255,255,255,.7); font-style: normal; font-size: .6em }
+.stat-lbl {
+  font-size: 12px; color: rgba(255,255,255,.75);
+  text-transform: uppercase; letter-spacing: .08em; font-weight: 700;
+}
+
+/* ── FEATURES ────────────────────────────────────────────────────── */
+.features {
+  padding: 100px max(24px, env(safe-area-inset-left,0px));
+  max-width: 1200px; margin: 0 auto;
+}
+.eyebrow {
+  font-family: var(--fd); font-size: 11px; font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 10px; display: block;
+}
+.section-h {
+  font-family: var(--fd);
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 900; font-style: italic; text-transform: uppercase;
+  letter-spacing: -.02em; line-height: 1.05;
+  color: var(--fg); margin-bottom: 14px;
+}
+.section-h em { color: var(--accent); font-style: italic }
+.section-p {
+  font-size: 16px; color: var(--fg-2); max-width: 480px; line-height: 1.65;
+  margin-bottom: 52px;
+}
+.feat-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1.5px; background: var(--border); border-radius: 18px; overflow: hidden;
+}
+.feat-card {
+  background: var(--bg); padding: 32px 28px;
+  transition: background .2s; cursor: default; position: relative;
+}
+.feat-card::after {
+  content: '';
+  position: absolute; bottom: 0; left: 28px; right: 28px; height: 2px;
+  background: var(--accent); transform: scaleX(0); transform-origin: left;
+  transition: transform .3s var(--ease);
+}
+.feat-card:hover { background: var(--bg-2) }
+.feat-card:hover::after { transform: scaleX(1) }
+.feat-num {
+  font-family: var(--fd); font-size: 42px; font-weight: 900; font-style: italic;
+  color: var(--bg-3); line-height: 1; margin-bottom: 18px; transition: color .3s;
+  -webkit-text-stroke: 1.5px var(--border);
+}
+.feat-card:hover .feat-num { color: var(--accent-soft); -webkit-text-stroke-color: rgba(255,90,30,.2) }
+.feat-icon {
+  width: 42px; height: 42px; border-radius: 11px;
+  display: grid; place-items: center; margin-bottom: 14px;
+}
+.feat-title {
+  font-family: var(--fd); font-size: 16px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: -.01em; margin-bottom: 8px; color: var(--fg);
+}
+.feat-desc { font-size: 13.5px; color: var(--fg-2); line-height: 1.6 }
+
+/* ── SPLIT ───────────────────────────────────────────────────────── */
+.split {
+  padding: 96px max(24px, env(safe-area-inset-left,0px));
+  background: var(--bg-2);
+}
+.split-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
+}
+.split-check-list { display: flex; flex-direction: column; gap: 18px; margin-top: 28px }
+.check-item { display: flex; align-items: flex-start; gap: 12px }
+.check-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent-soft); display: grid; place-items: center;
+  flex-shrink: 0; margin-top: 1px; color: var(--accent);
+}
+.check-text strong { display: block; font-family: var(--fd); font-size: 14px; font-weight: 700; color: var(--fg); margin-bottom: 2px }
+.check-text span { font-size: 13px; color: var(--fg-2) }
+/* Mock screen */
+.split-visual {
+  border-radius: 18px; overflow: hidden;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  box-shadow: 0 16px 48px rgba(0,0,0,.07);
+}
+.sv-bar {
+  background: var(--bg-2); border-bottom: 1px solid var(--border);
+  padding: 11px 16px; display: flex; align-items: center; gap: 7px;
+}
+.sv-dot { width: 10px; height: 10px; border-radius: 50% }
+.sv-url {
+  flex: 1; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; font-size: 10px; color: var(--fg-3);
+  margin: 0 12px; font-family: monospace; max-width: 220px;
+}
+.sv-body { padding: 16px }
+.member-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px; border-radius: 9px; transition: background .15s; cursor: default;
+}
+.member-row:hover { background: var(--bg-2) }
+.mr-av {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-family: var(--fd); font-size: 11px; font-weight: 800; color: white;
+}
+.mr-name { font-family: var(--fd); font-size: 12.5px; font-weight: 700; color: var(--fg); flex: 1 }
+.mr-plan { font-size: 10.5px; color: var(--fg-3) }
+.mr-badge {
+  padding: 3px 9px; border-radius: 100px; font-size: 10px; font-weight: 700;
+  font-family: var(--fd); letter-spacing: .03em; flex-shrink: 0;
+}
+.b-ok  { background: var(--ok-bg); color: var(--ok) }
+.b-warn{ background: var(--warn-bg); color: var(--warn) }
+.b-bad { background: var(--bad-bg); color: var(--bad) }
+
+/* ── PRICING ─────────────────────────────────────────────────────── */
+.pricing-section {
+  padding: 100px max(24px, env(safe-area-inset-left,0px));
+  max-width: 1200px; margin: 0 auto;
+}
+.pricing-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px }
+.pc {
+  border-radius: 20px; padding: 32px 28px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-2);
+  position: relative; transition: transform .25s var(--ease), border-color .25s, box-shadow .25s;
+}
+.pc:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 12px 36px rgba(255,90,30,.12) }
+.pc.featured {
+  background: var(--fg); border-color: var(--fg); color: white;
+  box-shadow: 0 20px 56px rgba(10,13,20,.22);
+}
+.pc.featured:hover { transform: translateY(-6px); box-shadow: 0 28px 64px rgba(10,13,20,.3) }
+.pc-badge {
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: white;
+  font-family: var(--fd); font-size: 10px; font-weight: 800;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 100px; white-space: nowrap;
+}
+.pc-name {
+  font-family: var(--fd); font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px;
+  color: var(--fg-3);
+}
+.pc.featured .pc-name { color: rgba(255,255,255,.6) }
+.pc-price {
+  font-family: var(--fd); font-size: 40px; font-weight: 900; font-style: italic;
+  letter-spacing: -.02em; line-height: 1; margin-bottom: 4px; color: var(--fg);
+}
+.pc.featured .pc-price { color: white }
+.pc-period { font-size: 12px; color: var(--fg-3); margin-bottom: 24px }
+.pc.featured .pc-period { color: rgba(255,255,255,.5) }
+.pc-list { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px }
+.pc-list li { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: var(--fg-2) }
+.pc.featured .pc-list li { color: rgba(255,255,255,.8) }
+.pc-list li svg { flex-shrink: 0; margin-top: 1px }
+.pc-list li.off { opacity: .35 }
+.btn-pc {
+  width: 100%; padding: 12px; border-radius: 10px;
+  font-family: var(--fd); font-size: 13px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+  cursor: pointer; transition: all .2s; text-align: center; display: block;
+}
+.btn-pc-dark { background: var(--fg); color: white; border: none }
+.btn-pc-dark:hover { background: #1E2A3B; box-shadow: 0 4px 16px rgba(0,0,0,.2) }
+.btn-pc-accent { background: var(--accent); color: white; border: none }
+.btn-pc-accent:hover { background: var(--accent-h); box-shadow: 0 6px 22px var(--accent-glow) }
+.btn-pc-outline { background: transparent; border: 1.5px solid rgba(255,255,255,.25); color: white }
+.btn-pc-outline:hover { border-color: white; background: rgba(255,255,255,.06) }
+
+/* ── TESTIMONIALS ────────────────────────────────────────────────── */
+.testi-section {
+  padding: 96px max(24px, env(safe-area-inset-left,0px));
+  background: var(--bg-2); overflow: hidden;
+}
+.testi-inner { max-width: 1200px; margin: 0 auto }
+.testi-row {
+  display: flex; gap: 20px;
+  overflow-x: auto; scrollbar-width: none; padding-bottom: 4px;
+  scroll-snap-type: x mandatory;
+  margin: 0 -24px; padding: 4px 24px 12px;
+}
+.testi-row::-webkit-scrollbar { display: none }
+.testi-card {
+  flex-shrink: 0; width: 320px; border-radius: 18px;
+  background: white; border: 1.5px solid var(--border);
+  padding: 26px; scroll-snap-align: start;
+  box-shadow: 0 4px 16px rgba(0,0,0,.05);
+  transition: transform .25s var(--ease), box-shadow .25s;
+}
+.testi-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.09) }
+.testi-stars { color: var(--accent); font-size: 14px; letter-spacing: 2px; margin-bottom: 14px }
+.testi-q {
+  font-size: 14px; line-height: 1.68; color: var(--fg-2); margin-bottom: 18px; font-style: italic;
+}
+.testi-av {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-family: var(--fd); font-size: 12px; font-weight: 900; color: white;
+}
+.testi-name { font-family: var(--fd); font-size: 13px; font-weight: 700; color: var(--fg) }
+.testi-gym { font-size: 11px; color: var(--fg-3); margin-top: 1px }
+
+/* ── CTA FINAL ───────────────────────────────────────────────────── */
+.final-cta {
+  padding: 100px max(24px, env(safe-area-inset-left,0px));
+  background: var(--fg); text-align: center; position: relative; overflow: hidden;
+}
+.cta-radial {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(255,90,30,.16) 0%, transparent 70%);
+}
+.final-cta h2 {
+  font-family: var(--fd);
+  font-size: clamp(34px, 5.5vw, 62px);
+  font-weight: 900; font-style: italic; text-transform: uppercase;
+  letter-spacing: -.025em; line-height: 1.05;
+  color: white; margin-bottom: 18px; position: relative;
+}
+.final-cta h2 em { color: var(--accent); font-style: italic }
+.final-cta p {
+  font-size: 17px; color: rgba(255,255,255,.65);
+  max-width: 460px; margin: 0 auto 40px; line-height: 1.65; position: relative;
+}
+.btn-final {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 17px 44px; background: var(--accent); border: none;
+  border-radius: 12px; font-family: var(--fd); font-size: 15px;
+  font-weight: 900; letter-spacing: .04em; text-transform: uppercase;
+  color: white; cursor: pointer; position: relative;
+  transition: all .2s; box-shadow: 0 10px 40px var(--accent-glow);
+}
+.btn-final:hover { background: var(--accent-h); box-shadow: 0 16px 52px rgba(255,90,30,.45); transform: translateY(-2px) }
+.cta-trust {
+  margin-top: 26px; font-size: 12px; color: rgba(255,255,255,.45);
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  flex-wrap: wrap; position: relative;
+}
+.cta-trust span { display: flex; align-items: center; gap: 6px }
+
+/* ── FOOTER ──────────────────────────────────────────────────────── */
+footer {
+  background: var(--bg-2);
+  border-top: 1px solid var(--border);
+  padding: 52px max(24px, env(safe-area-inset-left,0px)) 28px;
+}
+.footer-inner { max-width: 1200px; margin: 0 auto }
+.footer-top {
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 44px;
+}
+.footer-brand p { font-size: 13px; color: var(--fg-3); line-height: 1.6; margin-top: 10px; max-width: 220px }
+.footer-col h4 {
+  font-family: var(--fd); font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--fg); margin-bottom: 16px;
+}
+.footer-col a { display: block; font-size: 13px; color: var(--fg-3); margin-bottom: 10px; transition: color .2s }
+.footer-col a:hover { color: var(--accent) }
+.footer-bottom {
+  border-top: 1px solid var(--border); padding-top: 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--fg-3);
+}
+.footer-bottom a { color: var(--fg-3); transition: color .2s }
+.footer-bottom a:hover { color: var(--fg) }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .hero-inner { grid-template-columns: 1fr }
+  .hero-visual { display: none }
+  .split-inner { grid-template-columns: 1fr }
+  .feat-grid { grid-template-columns: 1fr 1fr }
+  .pricing-cards { grid-template-columns: 1fr }
+  .stats-inner { grid-template-columns: 1fr 1fr; gap: 20px }
+  .footer-top { grid-template-columns: 1fr 1fr }
+}
+@media (max-width: 640px) {
+  h1 { font-size: 40px }
+  .feat-grid { grid-template-columns: 1fr }
+  .nav-links, .btn-ghost-nav { display: none }
+  .footer-top { grid-template-columns: 1fr }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="logo-mark">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 8h2M16 8h2M6 16h2M16 16h2M8 8h8M8 16h8"/></svg>
+      </div>
+      <span class="logo-name">Abidjan<em>Gym</em></span>
+    </a>
+    <div class="nav-links">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#tarifs">Tarifs</a>
+      <a href="#temoignages">Avis</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="nav-cta">
+      <a href="dashboard.html" class="btn-ghost-nav">Voir la démo</a>
+      <a href="onboarding.html" class="btn-accent-nav">J'inscris ma salle</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-shape-1"></div>
+  <div class="hero-shape-2"></div>
+  <div class="hero-dots"></div>
+  <div class="hero-inner">
+    <!-- Text -->
+    <div>
+      <div class="hero-tag">Conçu pour la Côte d'Ivoire</div>
+      <h1>
+        Gérez<br>
+        <em>votre salle</em><br>
+        <span class="outline">Autrement</span>
+      </h1>
+      <p class="hero-sub">La plateforme pensée pour les salles de sport à Abidjan — Mobile Money, QR code, WhatsApp et notifications automatiques.</p>
+      <div class="hero-btns">
+        <a href="onboarding.html" class="btn-hero-primary">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          J'inscris ma salle
+        </a>
+        <a href="dashboard.html" class="btn-hero-outline">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Voir la démo
+        </a>
+      </div>
+    </div>
+
+    <!-- Visual photo -->
+    <div class="hero-visual">
+      <div class="hero-chip">2 mois gratuits</div>
+      <img src="../photos/u9482158516_Professional_Black_African_man_28_years_old_doing_777bd3dc-a382-4621-acd4-eef63a8ad4e2_1.png"
+           alt="Entraînement intensif — salle de sport Abidjan"
+           style="width:100%;border-radius:20px;aspect-ratio:4/5;object-fit:cover;object-position:center top;box-shadow:0 24px 64px rgba(0,0,0,.14);display:block">
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span class="ticker-item">Mobile Money</span>
+    <span class="ticker-item">QR Code accès</span>
+    <span class="ticker-item">Notifications WhatsApp</span>
+    <span class="ticker-item">Orange Money</span>
+    <span class="ticker-item">MTN MoMo</span>
+    <span class="ticker-item">Wave</span>
+    <span class="ticker-item">14 jours gratuits</span>
+    <span class="ticker-item">Rapports détaillés</span>
+    <span class="ticker-item">Abonnements illimités</span>
+    <span class="ticker-item">Scan instantané</span>
+    <span class="ticker-item">Mobile Money</span>
+    <span class="ticker-item">QR Code accès</span>
+    <span class="ticker-item">Notifications WhatsApp</span>
+    <span class="ticker-item">Orange Money</span>
+    <span class="ticker-item">MTN MoMo</span>
+    <span class="ticker-item">Wave</span>
+    <span class="ticker-item">14 jours gratuits</span>
+    <span class="ticker-item">Rapports détaillés</span>
+    <span class="ticker-item">Abonnements illimités</span>
+    <span class="ticker-item">Scan instantané</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-band">
+  <div class="stats-inner stagger">
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="counter" data-target="247">0</span><em>+</em></div>
+      <div class="stat-lbl">Abonnés gérés</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="counter" data-target="2225">0</span><em>k FCFA</em></div>
+      <div class="stat-lbl">Revenus / mois</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="counter" data-target="99">0</span><em>%</em></div>
+      <div class="stat-lbl">Disponibilité</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num"><span class="counter" data-target="14">0</span><em> jours</em></div>
+      <div class="stat-lbl">Essai offert</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="fonctionnalites">
+  <span class="eyebrow reveal">Fonctionnalités</span>
+  <h2 class="section-h reveal">Tout ce qu'il faut<br><em>pour gérer</em></h2>
+  <p class="section-p reveal">Une seule plateforme pour vos abonnements, paiements, contrôle d'accès et communications.</p>
+  <div class="feat-grid">
+    <div class="feat-card reveal">
+      <div class="feat-num">01</div>
+      <div class="feat-icon" style="background:var(--accent-soft);color:var(--accent)">
+        <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div class="feat-title">Paiements Mobile Money</div>
+      <div class="feat-desc">Orange Money, MTN MoMo, Wave. Encaissez sans terminal. Reçu imprimé automatiquement à chaque transaction.</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-num">02</div>
+      <div class="feat-icon" style="background:var(--ok-bg);color:var(--ok)">
+        <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="4" height="4"/></svg>
+      </div>
+      <div class="feat-title">QR Code d'accès</div>
+      <div class="feat-desc">Chaque abonné reçoit son QR code unique. Scan depuis n'importe quel téléphone. Refus automatique si expiré.</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-num">03</div>
+      <div class="feat-icon" style="background:rgba(99,102,241,.1);color:#6366F1">
+        <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="feat-title">Notifications WhatsApp</div>
+      <div class="feat-desc">Rappels J-7, J-3, J-1. Confirmation de paiement. Messages personnalisés avec le prénom — tout automatique.</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-num">04</div>
+      <div class="feat-icon" style="background:rgba(251,191,36,.1);color:#B45309">
+        <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <div class="feat-title">Gestion des abonnés</div>
+      <div class="feat-desc">Fiches complètes, historique des paiements, statuts temps réel. Mensuel, hebdo, journalier, packs — à vous de choisir.</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-num">05</div>
+      <div class="feat-icon" style="background:rgba(20,184,166,.1);color:#0F766E">
+        <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="feat-title">Rapports & Analyses</div>
+      <div class="feat-desc">Revenus, fréquentation horaire, renouvellements. Export PDF et CSV. Toujours à jour.</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-num">06</div>
+      <div class="feat-icon" style="background:rgba(239,68,68,.08);color:#DC2626">
+        <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </div>
+      <div class="feat-title">Votre image de marque</div>
+      <div class="feat-desc">Logo, couleurs, photos, horaires. Votre espace en ligne aux couleurs de votre établissement — en 5 minutes.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PHOTO BAND — cours collectif -->
+<div style="position:relative;overflow:hidden;height:380px">
+  <img src="../photos/u9482158516_Group_of_Black_African_people_doing_a_fitness_cla_d0f61ff2-e96b-49eb-8e01-26424c3c316e_1.png"
+       alt="Cours collectif — salle de sport Abidjan"
+       style="width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block">
+  <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,13,20,.85) 0%,rgba(10,13,20,.45) 60%,transparent 100%)"></div>
+  <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 max(40px,8vw)">
+    <div style="max-width:520px">
+      <p style="font-family:var(--fd);font-size:clamp(28px,4.5vw,56px);font-weight:900;font-style:italic;text-transform:uppercase;color:white;letter-spacing:-.02em;line-height:1.05;margin-bottom:18px;text-wrap:balance">
+        La salle,<br><em style="color:var(--accent)">enfin</em> sous contrôle
+      </p>
+      <p style="font-size:15px;color:rgba(255,255,255,.75);line-height:1.6;margin-bottom:26px">Rejoignez les gérants qui ont modernisé leur salle en moins de 10 minutes.</p>
+      <a href="onboarding.html" style="display:inline-flex;align-items:center;gap:8px;padding:13px 26px;background:var(--accent);color:white;border-radius:9px;font-family:var(--fd);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;text-decoration:none;box-shadow:0 6px 24px rgba(255,90,30,.4)">
+        J'inscris ma salle →
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- SPLIT -->
+<section class="split" id="membres">
+  <div class="split-inner">
+    <div class="reveal-l">
+      <span class="eyebrow">Abonnés</span>
+      <h2 class="section-h">Toujours en<br><em>contrôle</em></h2>
+      <p style="font-size:15px;color:var(--fg-2);line-height:1.65">Voyez qui est actif, qui expire bientôt, qui n'a pas renouvelé. Agissez avant de perdre un abonné.</p>
+      <div class="split-check-list">
+        <div class="check-item">
+          <div class="check-dot"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="check-text"><strong>Statuts en temps réel</strong><span>Actif, expiré, suspendu — mis à jour automatiquement chaque nuit</span></div>
+        </div>
+        <div class="check-item">
+          <div class="check-dot"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="check-text"><strong>Historique complet</strong><span>Tous les paiements, toutes les entrées, toutes les notifications</span></div>
+        </div>
+        <div class="check-item">
+          <div class="check-dot"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="check-text"><strong>Alerte d'expiration</strong><span>WhatsApp automatique avant que l'abonné ne parte</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal-r" style="border-radius:18px;overflow:hidden;box-shadow:0 20px 56px rgba(0,0,0,.1);align-self:center">
+      <img src="../photos/u9482158516_Young_Black_African_woman_gym_receptionist_scanni_f1db445f-87a5-4026-9868-f82d4b784a8b_0.png"
+           alt="Scan QR code accès — salle de sport Abidjan"
+           style="width:100%;display:block;aspect-ratio:4/3;object-fit:cover">
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="tarifs">
+  <span class="eyebrow reveal">Tarifs</span>
+  <h2 class="section-h reveal">Commencez<br><em>gratuitement</em></h2>
+  <p class="section-p reveal">14 jours d'essai sur toutes les formules. Payez par Orange Money, MTN MoMo ou Wave.</p>
+  <div class="pricing-cards stagger">
+    <div class="pc reveal">
+      <div class="pc-name">Starter</div>
+      <div class="pc-price">0 FCFA</div>
+      <div class="pc-period">Gratuit · puis Essentiel après 14 jours</div>
+      <ul class="pc-list">
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Jusqu'à 50 abonnés</li>
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>QR code d'accès</li>
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Paiements Mobile Money</li>
+        <li class="off"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Notifications WhatsApp</li>
+        <li class="off"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rapports avancés</li>
+      </ul>
+      <a href="onboarding.html" class="btn-pc btn-pc-dark">Commencer gratuitement</a>
+    </div>
+    <div class="pc featured reveal">
+      <div class="pc-badge">⭐ Populaire</div>
+      <div class="pc-name">Essentiel</div>
+      <div class="pc-price">15 000 FCFA</div>
+      <div class="pc-period">/mois · sans engagement</div>
+      <ul class="pc-list">
+        <li><svg width="13" height="13" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Abonnés illimités</li>
+        <li><svg width="13" height="13" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>QR code + domotique</li>
+        <li><svg width="13" height="13" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Mobile Money</li>
+        <li><svg width="13" height="13" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Notifications WhatsApp & SMS</li>
+        <li><svg width="13" height="13" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Rapports + export PDF/CSV</li>
+      </ul>
+      <a href="onboarding.html" class="btn-pc btn-pc-accent">Choisir Essentiel</a>
+    </div>
+    <div class="pc reveal">
+      <div class="pc-name">Pro</div>
+      <div class="pc-price">35 000 FCFA</div>
+      <div class="pc-period">/mois · jusqu'à 5 salles</div>
+      <ul class="pc-list">
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Tout d'Essentiel</li>
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Multi-salles (5 max)</li>
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>API & intégrations</li>
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Support prioritaire WhatsApp</li>
+        <li><svg width="13" height="13" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Formation incluse (2h)</li>
+      </ul>
+      <a href="onboarding.html" class="btn-pc btn-pc-dark">Choisir Pro</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-section" id="temoignages">
+  <div class="testi-inner">
+    <span class="eyebrow reveal">Témoignages</span>
+    <h2 class="section-h reveal">Ils nous font<br><em>confiance</em></h2>
+    <p class="section-p reveal" style="margin-bottom:36px">Des gérants de salles à Abidjan partagent leur expérience.</p>
+    <div class="testi-row">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-q">"Avant, je notais tout dans un cahier. Maintenant je sais en temps réel combien j'ai de membres actifs et ce que j'ai encaissé. Un vrai gain de temps."</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="testi-av" style="background:var(--accent)">KA</div>
+          <div><div class="testi-name">Kouassi Aimé</div><div class="testi-gym">FitZone Cocody, Abidjan</div></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-q">"Le QR code d'entrée a changé notre accueil. Plus de file d'attente. Les rappels WhatsApp ont réduit les oublis de renouvellement de 60%."</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="testi-av" style="background:#3B82F6">TO</div>
+          <div><div class="testi-name">Touré Olivia</div><div class="testi-gym">Gym Elite Marcory, Abidjan</div></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★☆</div>
+        <p class="testi-q">"Orange Money directement dans le logiciel, c'est exactement ce qu'il nous fallait. Mes clients paient sans se déplacer et je vois tout en temps réel."</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="testi-av" style="background:#16A34A">DB</div>
+          <div><div class="testi-name">Diabaté Brahima</div><div class="testi-gym">Force Gym Yopougon, Abidjan</div></div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-q">"La config a pris 10 minutes. Le lendemain mes abonnés avaient leur QR code. Simple, rapide, efficace — exactement ce que ma salle a besoin."</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="testi-av" style="background:#8B5CF6">SK</div>
+          <div><div class="testi-name">Sanogo Karidjatou</div><div class="testi-gym">Body Shape Abobo, Abidjan</div></div>
+        </div>
+      </div>
+      <!-- Photo portrait card -->
+      <div class="testi-card" style="position:relative;overflow:hidden;padding:0;border:none;background:transparent;min-width:220px;flex-shrink:0">
+        <img src="../photos/u9482158516_African_woman_in_athletic_wear_looking_confident__e8fcf151-4e10-4f60-b57e-e26fd5a0f603_0.png"
+             alt="Athlète — AbidjanGym"
+             style="width:100%;height:100%;min-height:300px;object-fit:cover;object-position:center top;border-radius:18px;display:block">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(10,13,20,.88) 0%,transparent 55%);border-radius:18px"></div>
+        <div style="position:absolute;bottom:20px;left:20px;right:20px">
+          <div class="testi-stars">★★★★★</div>
+          <p style="font-size:13px;color:white;font-style:italic;line-height:1.5;margin-bottom:10px">"AbidjanGym, c'est la solution qu'on attendait. Tout est clair, tout est simple."</p>
+          <div class="testi-name" style="color:white">Cissé Aminata</div>
+          <div class="testi-gym" style="color:rgba(255,255,255,.6)">Power Ladies Gym, Adjamé</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OWNER SECTION -->
+<section style="padding:80px max(40px,8vw);background:var(--surface-2, #F5F7FB)">
+  <div style="max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+    <div style="border-radius:20px;overflow:hidden;box-shadow:0 20px 56px rgba(0,0,0,.09)" class="reveal-l">
+      <img src="../photos/u9482158516_African_gym_owner_looking_at_a_tabletphone_with_f_cba56b83-f32e-4e81-bc60-866f26a8d3bc_1.png"
+           alt="Gérant de salle — AbidjanGym"
+           style="width:100%;display:block;aspect-ratio:4/5;object-fit:cover;object-position:center top">
+    </div>
+    <div class="reveal-r">
+      <span class="eyebrow">Pour les gérants</span>
+      <h2 class="section-h" style="margin-bottom:16px">Tout sous<br><em>vos yeux</em></h2>
+      <p style="font-size:15px;color:var(--fg-2);line-height:1.65;margin-bottom:28px">Vérifiez vos encaissements, votre fréquentation, vos abonnés depuis votre téléphone — partout, n'importe quand.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:var(--fg-2)">
+          <div style="width:32px;height:32px;border-radius:8px;background:var(--accent-soft,rgba(255,90,30,.09));display:grid;place-items:center;flex-shrink:0">
+            <svg width="15" height="15" fill="none" stroke="var(--accent,#FF5A1E)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span><strong>Tableau de bord en temps réel</strong> — revenus, entrées, alertes</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:var(--fg-2)">
+          <div style="width:32px;height:32px;border-radius:8px;background:var(--accent-soft,rgba(255,90,30,.09));display:grid;place-items:center;flex-shrink:0">
+            <svg width="15" height="15" fill="none" stroke="var(--accent,#FF5A1E)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span><strong>Rapports exportables</strong> — PDF et CSV en un clic</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:var(--fg-2)">
+          <div style="width:32px;height:32px;border-radius:8px;background:var(--accent-soft,rgba(255,90,30,.09));display:grid;place-items:center;flex-shrink:0">
+            <svg width="15" height="15" fill="none" stroke="var(--accent,#FF5A1E)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span><strong>Multi-staff</strong> — caissier, coach, admin avec droits différents</span>
+        </div>
+      </div>
+      <a href="onboarding.html" style="display:inline-flex;align-items:center;gap:8px;padding:13px 26px;background:var(--fg,#0A0D14);color:white;border-radius:9px;font-family:var(--fd,'Plus Jakarta Sans',sans-serif);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;text-decoration:none">
+        Voir la démo →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="final-cta">
+  <div class="cta-radial"></div>
+  <h2 class="reveal">Prêt à passer<br>à la <em>vitesse</em><br>supérieure ?</h2>
+  <p class="reveal">Rejoignez les gérants de salles qui gagnent du temps chaque jour. Inscription en 5 minutes, aucune carte bancaire.</p>
+  <a href="onboarding.html" class="btn-final reveal">
+    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    J'inscris ma salle — c'est gratuit
+  </a>
+  <div class="cta-trust">
+    <span><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> 14 jours d'essai</span>
+    <span><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Sans carte bancaire</span>
+    <span><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Orange Money & Wave acceptés</span>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center">
+            <svg width="17" height="17" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 8h2M16 8h2M6 16h2M16 16h2M8 8h8M8 16h8"/></svg>
+          </div>
+          <span style="font-family:var(--fd);font-size:17px;font-weight:900;color:var(--fg)">Abidjan<em style="color:var(--accent);font-style:normal">Gym</em></span>
+        </div>
+        <p>La plateforme de gestion de salles de sport pensée pour l'Afrique de l'Ouest.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Produit</h4>
+        <a href="#fonctionnalites">Fonctionnalités</a>
+        <a href="#tarifs">Tarifs</a>
+        <a href="dashboard.html">Démo live</a>
+        <a href="#">Nouveautés</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="#">Centre d'aide</a>
+        <a href="contact.html">Nous contacter</a>
+        <a href="#">WhatsApp support</a>
+      </div>
+      <div class="footer-col">
+        <h4>Légal</h4>
+        <a href="#">Confidentialité</a>
+        <a href="#">Conditions d'utilisation</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 AbidjanGym — Le Labo de Zézé, Abidjan 🇨🇮</span>
+      <div style="display:flex;gap:16px">
+        <a href="#">Facebook</a>
+        <a href="#">Instagram</a>
+        <a href="#">WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* Nav scroll */
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+/* Scroll reveal */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -32px 0px' });
+document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el => io.observe(el));
+
+/* Counter animation */
+function count(el) {
+  const target = +el.dataset.target, dur = 1600;
+  const t0 = performance.now();
+  const tick = t => {
+    const p = Math.min((t - t0) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 4);
+    el.textContent = Math.round(ease * target).toLocaleString('fr');
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+const cio = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { count(e.target); cio.unobserve(e.target) } });
+}, { threshold: 0.5 });
+document.querySelectorAll('.counter').forEach(el => cio.observe(el));
+
+/* Hero counter on load */
+function heroCount(id, target, dur, suffix) {
+  const el = document.getElementById(id); if (!el) return;
+  const t0 = performance.now();
+  const tick = t => {
+    const p = Math.min((t - t0) / dur, 1);
+    el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  setTimeout(() => requestAnimationFrame(tick), 500);
+}
+heroCount('hero-c1', 247, 1600, '');
+heroCount('hero-c2', 185, 1800, 'k');
+heroCount('hero-c3', 23, 1000, '');
+</script>
+</body>
+</html>

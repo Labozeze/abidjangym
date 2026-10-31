@@ -1,0 +1,381 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Paramètres — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+.settings-layout { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start }
+.settings-nav { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden }
+.sn-group { padding: 10px 0 }
+.sn-label { padding: 8px 16px 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--fg-3) }
+.sn-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 16px; font-size: 13px; font-weight: 500;
+  color: var(--fg-2); cursor: pointer; transition: all .12s;
+  text-decoration: none;
+}
+.sn-item:hover { background: var(--surface-2); color: var(--fg) }
+.sn-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600 }
+.sn-item svg { flex-shrink: 0; opacity: .7 }
+.sn-item.active svg { opacity: 1 }
+.sn-divider { height: 1px; background: var(--border); margin: 4px 0 }
+
+.settings-content { display: flex; flex-direction: column; gap: 16px }
+.s-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden }
+.s-card-hd { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between }
+.s-card-title { font-family: var(--fd); font-size: 14px; font-weight: 700 }
+.s-card-body { padding: 20px }
+
+/* Logo upload zone */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--r-lg);
+  padding: 28px; text-align: center; cursor: pointer;
+  transition: all .15s; position: relative;
+}
+.upload-zone:hover { border-color: var(--accent); background: var(--accent-soft) }
+.upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer }
+.uz-preview {
+  width: 72px; height: 72px; border-radius: 16px; margin: 0 auto 10px;
+  background: linear-gradient(135deg, #FF5A1E, #FF8C4A);
+  display: grid; place-items: center;
+  font-family: var(--fd); font-size: 26px; font-weight: 800; color: white;
+}
+.uz-text { font-size: 13px; font-weight: 600; margin-bottom: 4px }
+.uz-hint { font-size: 11px; color: var(--fg-3) }
+
+/* Color swatches */
+.color-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap }
+.color-swatch {
+  width: 36px; height: 36px; border-radius: 8px; border: 3px solid transparent;
+  cursor: pointer; transition: all .12s; flex-shrink: 0;
+}
+.color-swatch.selected { border-color: var(--fg); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--fg) }
+.color-input-wrap { display: flex; align-items: center; gap: 8px }
+.color-preview { width: 32px; height: 32px; border-radius: 7px; border: 1px solid var(--border) }
+
+/* Images grid */
+.images-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px }
+.img-slot {
+  aspect-ratio: 16/9; border-radius: var(--r); border: 2px dashed var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .12s; position: relative; overflow: hidden;
+  background: var(--surface-2);
+}
+.img-slot:hover { border-color: var(--accent) }
+.img-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
+.img-slot-label { font-size: 11px; color: var(--fg-3); margin-top: 6px; text-align: center }
+
+/* Horaires */
+.hours-table { width: 100%; border-collapse: collapse }
+.hours-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); vertical-align: middle }
+.hours-table tr:last-child td { border-bottom: none }
+.day-name { font-size: 13px; font-weight: 500; width: 90px }
+.time-pair { display: flex; align-items: center; gap: 8px }
+.time-input { width: 90px; padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--surface); color: var(--fg) }
+.time-input:focus { outline: none; border-color: var(--accent) }
+
+@media (max-width: 900px) {
+  .settings-layout { grid-template-columns: 1fr }
+  .settings-nav { display: none }
+  .images-grid { grid-template-columns: 1fr 1fr }
+}
+</style>
+</head>
+<body>
+<div id="sb-ov" class="sb-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar-root"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn menu-btn" id="menu-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="tb-page">Paramètres</span>
+      <div class="tb-actions">
+        <button class="btn btn-primary btn-sm">Enregistrer les modifications</button>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="pg-hd">
+        <div>
+          <div class="pg-title">Paramètres de la salle</div>
+          <div class="pg-sub">Personnalisez l'identité et la configuration de FitZone Abidjan</div>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Nav -->
+        <div class="settings-nav">
+          <div class="sn-group">
+            <div class="sn-label">Salle</div>
+            <a href="settings.html" class="sn-item active">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Profil salle
+            </a>
+            <a href="#" class="sn-item">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              Couleurs & Images
+            </a>
+            <a href="#" class="sn-item">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Horaires
+            </a>
+          </div>
+          <div class="sn-divider"></div>
+          <div class="sn-group">
+            <div class="sn-label">Opérations</div>
+            <a href="notifications.html" class="sn-item">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Notifications
+            </a>
+            <a href="#" class="sn-item">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              Paiements
+            </a>
+            <a href="#" class="sn-item">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              Utilisateurs
+            </a>
+          </div>
+          <div class="sn-divider"></div>
+          <div class="sn-group">
+            <a href="#" class="sn-item">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 3 22 3 22 9"/><line x1="22" y1="3" x2="11" y2="14"/></svg>
+              Intégrations
+            </a>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="settings-content">
+          <!-- Identité -->
+          <div class="s-card">
+            <div class="s-card-hd">
+              <span class="s-card-title">Identité de la salle</span>
+              <span class="badge b-ok">Complété</span>
+            </div>
+            <div class="s-card-body">
+              <div class="frow">
+                <div class="fgrp">
+                  <label class="lbl">Nom de la salle *</label>
+                  <input class="inp" type="text" value="FitZone Abidjan">
+                </div>
+                <div class="fgrp">
+                  <label class="lbl">Slogan (optionnel)</label>
+                  <input class="inp" type="text" value="Votre santé, notre priorité">
+                </div>
+              </div>
+              <div class="frow">
+                <div class="fgrp">
+                  <label class="lbl">Adresse *</label>
+                  <input class="inp" type="text" value="Rue de la Cathédrale, Plateau">
+                </div>
+                <div class="fgrp">
+                  <label class="lbl">Ville *</label>
+                  <input class="inp" type="text" value="Abidjan">
+                </div>
+              </div>
+              <div class="frow">
+                <div class="fgrp">
+                  <label class="lbl">Téléphone *</label>
+                  <input class="inp" type="tel" value="07 08 00 11 22">
+                </div>
+                <div class="fgrp">
+                  <label class="lbl">Email de contact</label>
+                  <input class="inp" type="email" value="admin@fitzone-abidjan.ci">
+                </div>
+              </div>
+              <div class="frow">
+                <div class="fgrp">
+                  <label class="lbl">Site web</label>
+                  <input class="inp" type="url" value="https://fitzone-abidjan.ci">
+                </div>
+                <div class="fgrp">
+                  <label class="lbl">WhatsApp Business</label>
+                  <input class="inp" type="tel" value="+225 07 08 00 11 22">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo -->
+          <div class="s-card">
+            <div class="s-card-hd">
+              <span class="s-card-title">Logo</span>
+            </div>
+            <div class="s-card-body">
+              <div class="frow" style="align-items:start;gap:20px">
+                <div class="upload-zone" style="flex:1">
+                  <input type="file" accept="image/*">
+                  <div class="uz-preview">FZ</div>
+                  <div class="uz-text">Cliquez pour remplacer le logo</div>
+                  <div class="uz-hint">PNG ou JPG recommandé · Fond transparent idéal · Max 2 Mo</div>
+                </div>
+                <div style="flex-shrink:0;text-align:center">
+                  <div style="font-size:11px;font-weight:600;color:var(--fg-3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Aperçu</div>
+                  <div style="display:flex;gap:10px;align-items:flex-end">
+                    <div style="text-align:center">
+                      <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#FF5A1E,#FF8C4A);display:grid;place-items:center;font-family:var(--fd);font-size:22px;font-weight:800;color:white;margin-bottom:5px">FZ</div>
+                      <div style="font-size:10px;color:var(--fg-3)">Grand</div>
+                    </div>
+                    <div style="text-align:center">
+                      <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#FF5A1E,#FF8C4A);display:grid;place-items:center;font-family:var(--fd);font-size:13px;font-weight:800;color:white;margin-bottom:5px">FZ</div>
+                      <div style="font-size:10px;color:var(--fg-3)">Sidebar</div>
+                    </div>
+                    <div style="text-align:center">
+                      <div style="width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#FF5A1E,#FF8C4A);display:grid;place-items:center;font-family:var(--fd);font-size:9px;font-weight:800;color:white;margin-bottom:5px">FZ</div>
+                      <div style="font-size:10px;color:var(--fg-3)">Petit</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colors -->
+          <div class="s-card">
+            <div class="s-card-hd">
+              <span class="s-card-title">Couleurs de marque</span>
+            </div>
+            <div class="s-card-body">
+              <div class="frow">
+                <div class="fgrp">
+                  <label class="lbl">Couleur principale</label>
+                  <div class="color-row" style="margin-bottom:10px">
+                    <div class="color-swatch selected" style="background:#FF5A1E" title="#FF5A1E"></div>
+                    <div class="color-swatch" style="background:#2563EB" title="#2563EB"></div>
+                    <div class="color-swatch" style="background:#7C3AED" title="#7C3AED"></div>
+                    <div class="color-swatch" style="background:#059669" title="#059669"></div>
+                    <div class="color-swatch" style="background:#DC2626" title="#DC2626"></div>
+                    <div class="color-swatch" style="background:#CA8A04" title="#CA8A04"></div>
+                  </div>
+                  <div class="color-input-wrap">
+                    <div class="color-preview" style="background:#FF5A1E"></div>
+                    <input class="inp" type="text" value="#FF5A1E" style="font-family:monospace;letter-spacing:.05em">
+                  </div>
+                </div>
+                <div class="fgrp">
+                  <label class="lbl">Couleur secondaire</label>
+                  <div class="color-row" style="margin-bottom:10px">
+                    <div class="color-swatch selected" style="background:#0C1A2C" title="#0C1A2C"></div>
+                    <div class="color-swatch" style="background:#1E293B" title="#1E293B"></div>
+                    <div class="color-swatch" style="background:#312E81" title="#312E81"></div>
+                    <div class="color-swatch" style="background:#134E4A" title="#134E4A"></div>
+                    <div class="color-swatch" style="background:#7F1D1D" title="#7F1D1D"></div>
+                  </div>
+                  <div class="color-input-wrap">
+                    <div class="color-preview" style="background:#0C1A2C"></div>
+                    <input class="inp" type="text" value="#0C1A2C" style="font-family:monospace;letter-spacing:.05em">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gallery images -->
+          <div class="s-card">
+            <div class="s-card-hd">
+              <span class="s-card-title">Images personnalisables (espace abonné)</span>
+            </div>
+            <div class="s-card-body">
+              <div class="images-grid">
+                <div>
+                  <div class="img-slot" style="background:linear-gradient(135deg,rgba(255,90,30,.15),rgba(255,90,30,.05));border-color:var(--accent)">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--accent)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <div style="font-size:10px;color:var(--accent);margin-top:6px;font-weight:600">Bannière 1 · Active</div>
+                  </div>
+                  <div class="img-slot-label">Bannière principale</div>
+                </div>
+                <div>
+                  <div class="img-slot">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--fg-3)"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <div style="font-size:10px;color:var(--fg-3);margin-top:6px">Cliquez pour ajouter</div>
+                  </div>
+                  <div class="img-slot-label">Bannière 2</div>
+                </div>
+                <div>
+                  <div class="img-slot">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--fg-3)"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <div style="font-size:10px;color:var(--fg-3);margin-top:6px">Cliquez pour ajouter</div>
+                  </div>
+                  <div class="img-slot-label">Bannière 3</div>
+                </div>
+              </div>
+              <div class="hint" style="margin-top:10px">Format recommandé : 1200×400px JPG/PNG · Max 5 Mo par image</div>
+            </div>
+          </div>
+
+          <!-- Horaires -->
+          <div class="s-card">
+            <div class="s-card-hd">
+              <span class="s-card-title">Horaires d'ouverture</span>
+            </div>
+            <div class="s-card-body">
+              <table class="hours-table">
+                <tbody>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:8px"><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label><span class="day-name">Lundi</span></div></td>
+                    <td><div class="time-pair"><input class="time-input" type="time" value="06:00"><span style="color:var(--fg-3)">→</span><input class="time-input" type="time" value="22:00"></div></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:8px"><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label><span class="day-name">Mardi</span></div></td>
+                    <td><div class="time-pair"><input class="time-input" type="time" value="06:00"><span style="color:var(--fg-3)">→</span><input class="time-input" type="time" value="22:00"></div></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:8px"><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label><span class="day-name">Mercredi</span></div></td>
+                    <td><div class="time-pair"><input class="time-input" type="time" value="06:00"><span style="color:var(--fg-3)">→</span><input class="time-input" type="time" value="22:00"></div></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:8px"><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label><span class="day-name">Jeudi</span></div></td>
+                    <td><div class="time-pair"><input class="time-input" type="time" value="06:00"><span style="color:var(--fg-3)">→</span><input class="time-input" type="time" value="22:00"></div></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:8px"><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label><span class="day-name">Vendredi</span></div></td>
+                    <td><div class="time-pair"><input class="time-input" type="time" value="06:00"><span style="color:var(--fg-3)">→</span><input class="time-input" type="time" value="22:00"></div></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:8px"><label class="tog"><input type="checkbox" checked><span class="tog-track"></span><span class="tog-thumb"></span></label><span class="day-name">Samedi</span></div></td>
+                    <td><div class="time-pair"><input class="time-input" type="time" value="08:00"><span style="color:var(--fg-3)">→</span><input class="time-input" type="time" value="20:00"></div></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex;align-items:center;gap:8px"><label class="tog"><input type="checkbox"><span class="tog-track"></span><span class="tog-thumb"></span></label><span class="day-name" style="color:var(--fg-3)">Dimanche</span></div></td>
+                    <td><span style="font-size:12px;color:var(--fg-3)">Fermé</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div style="display:flex;justify-content:flex-end;gap:10px;padding-bottom:8px">
+            <button class="btn btn-outline">Annuler les modifications</button>
+            <button class="btn btn-primary btn-lg">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="sidebar.js"></script>
+<script>
+document.querySelectorAll('.color-swatch').forEach(sw => {
+  sw.addEventListener('click', function() {
+    this.closest('.fgrp').querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    this.classList.add('selected');
+    const color = this.title;
+    const wrap = this.closest('.fgrp').querySelector('.color-input-wrap');
+    if (wrap) {
+      wrap.querySelector('.color-preview').style.background = color;
+      wrap.querySelector('input').value = color;
+    }
+  });
+});
+</script>
+</body>

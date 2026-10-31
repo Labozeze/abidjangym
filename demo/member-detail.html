@@ -1,0 +1,306 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Fiche abonné — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-3); margin-bottom: 18px }
+.breadcrumb a { color: var(--fg-3) }
+.breadcrumb a:hover { color: var(--accent) }
+.profile-header {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow);
+  padding: 24px; margin-bottom: 20px;
+  display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap;
+}
+.ph-left { display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 200px }
+.ph-info .name { font-family: var(--fd); font-size: 20px; font-weight: 800; margin-bottom: 4px }
+.ph-info .meta { font-size: 13px; color: var(--fg-3); margin-bottom: 8px }
+.ph-info .tags { display: flex; gap: 6px; flex-wrap: wrap }
+.ph-right { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start }
+.two-col-detail { display: grid; grid-template-columns: 300px 1fr; gap: 16px; margin-bottom: 16px }
+
+/* QR Card */
+.qr-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 20px; text-align: center }
+.qr-inner { background: white; border: 1px solid var(--border); border-radius: var(--r); padding: 16px; display: inline-block; margin-bottom: 14px }
+.qr-label { font-size: 12px; color: var(--fg-3); margin-bottom: 8px }
+.qr-id { font-family: monospace; font-size: 11px; color: var(--fg-3); margin-top: 10px; letter-spacing: .08em }
+.qr-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap }
+
+/* Sub info */
+.sub-info { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden }
+.sub-plan-header { background: linear-gradient(135deg, rgba(255,90,30,.08), rgba(255,90,30,.03)); border-bottom: 1px solid var(--border); padding: 18px }
+.sub-plan-name { font-family: var(--fd); font-size: 16px; font-weight: 800; margin-bottom: 6px }
+.progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin: 14px 0 6px; overflow: hidden }
+.progress-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width .4s }
+.progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--fg-3) }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 }
+.info-cell { padding: 12px 18px; border-bottom: 1px solid var(--border) }
+.info-cell:last-child, .info-cell:nth-last-child(2) { border-bottom: none }
+.info-cell-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); margin-bottom: 4px }
+.info-cell-val { font-size: 13px; font-weight: 600 }
+
+@media (max-width: 900px) {
+  .two-col-detail { grid-template-columns: 1fr }
+  .qr-card { display: flex; align-items: center; gap: 20px; text-align: left }
+  .qr-actions { justify-content: flex-start }
+}
+</style>
+</head>
+<body>
+<div id="sb-ov" class="sb-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar-root"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn menu-btn" id="menu-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="tb-page">Fiche abonné</span>
+      <div class="tb-actions">
+        <button class="btn btn-outline btn-sm">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          Modifier
+        </button>
+        <button class="btn btn-primary btn-sm">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
+          Renouveler
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="breadcrumb">
+        <a href="members.html">Abonnés</a>
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Kouassi Aya</span>
+      </div>
+
+      <!-- Profile header -->
+      <div class="profile-header">
+        <div class="ph-left">
+          <div class="av av-xl av-1">KA</div>
+          <div class="ph-info">
+            <div class="name">Kouassi Aya</div>
+            <div class="meta">Membre depuis le 1er mai 2025 · #M-1042</div>
+            <div class="tags">
+              <span class="badge b-ok">Actif</span>
+              <span class="badge b-muted">Mensuel Standard</span>
+              <span class="badge b-warn">Expire dans 2 jours</span>
+            </div>
+          </div>
+        </div>
+        <div class="ph-right">
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+            <div style="font-size:12px;color:var(--fg-3)">Téléphone</div>
+            <div style="font-weight:600">07 58 92 14</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);margin:0 8px"></div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+            <div style="font-size:12px;color:var(--fg-3)">Total payé</div>
+            <div style="font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums">425 000 FCFA</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);margin:0 8px"></div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+            <div style="font-size:12px;color:var(--fg-3)">Entrées totales</div>
+            <div style="font-weight:700">142</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR + Subscription -->
+      <div class="two-col-detail">
+        <!-- QR code -->
+        <div class="qr-card">
+          <div class="qr-label">QR Code d'accès</div>
+          <div class="qr-inner">
+            <!-- SVG QR code simulé -->
+            <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+              <rect width="140" height="140" fill="white"/>
+              <!-- Top-left position marker -->
+              <rect x="8" y="8" width="36" height="36" fill="#1A253E" rx="4"/>
+              <rect x="14" y="14" width="24" height="24" fill="white" rx="2"/>
+              <rect x="19" y="19" width="14" height="14" fill="#1A253E" rx="1"/>
+              <!-- Top-right position marker -->
+              <rect x="96" y="8" width="36" height="36" fill="#1A253E" rx="4"/>
+              <rect x="102" y="14" width="24" height="24" fill="white" rx="2"/>
+              <rect x="107" y="19" width="14" height="14" fill="#1A253E" rx="1"/>
+              <!-- Bottom-left position marker -->
+              <rect x="8" y="96" width="36" height="36" fill="#1A253E" rx="4"/>
+              <rect x="14" y="102" width="24" height="24" fill="white" rx="2"/>
+              <rect x="19" y="107" width="14" height="14" fill="#1A253E" rx="1"/>
+              <!-- Data modules (fake pattern) -->
+              <g fill="#1A253E">
+                <rect x="52" y="8" width="4" height="4"/><rect x="60" y="8" width="4" height="4"/>
+                <rect x="68" y="8" width="4" height="4"/><rect x="76" y="8" width="4" height="4"/>
+                <rect x="84" y="8" width="4" height="4"/><rect x="52" y="16" width="4" height="4"/>
+                <rect x="60" y="20" width="4" height="4"/><rect x="76" y="16" width="4" height="4"/>
+                <rect x="52" y="24" width="4" height="4"/><rect x="68" y="24" width="4" height="4"/>
+                <rect x="84" y="20" width="4" height="4"/><rect x="60" y="28" width="4" height="4"/>
+                <rect x="76" y="28" width="4" height="4"/><rect x="52" y="32" width="4" height="4"/>
+                <rect x="8" y="52" width="4" height="4"/><rect x="16" y="52" width="4" height="4"/>
+                <rect x="24" y="56" width="4" height="4"/><rect x="8" y="60" width="4" height="4"/>
+                <rect x="32" y="52" width="4" height="4"/><rect x="40" y="56" width="4" height="4"/>
+                <rect x="8" y="68" width="4" height="4"/><rect x="24" y="64" width="4" height="4"/>
+                <rect x="36" y="68" width="4" height="4"/><rect x="16" y="76" width="4" height="4"/>
+                <rect x="32" y="72" width="4" height="4"/><rect x="8" y="80" width="4" height="4"/>
+                <rect x="52" y="52" width="4" height="4"/><rect x="60" y="52" width="4" height="4"/>
+                <rect x="68" y="56" width="4" height="4"/><rect x="76" y="52" width="4" height="4"/>
+                <rect x="84" y="52" width="4" height="4"/><rect x="92" y="56" width="4" height="4"/>
+                <rect x="52" y="64" width="4" height="4"/><rect x="68" y="60" width="4" height="4"/>
+                <rect x="84" y="64" width="4" height="4"/><rect x="60" y="68" width="4" height="4"/>
+                <rect x="76" y="68" width="4" height="4"/><rect x="92" y="64" width="4" height="4"/>
+                <rect x="96" y="52" width="4" height="4"/><rect x="108" y="52" width="4" height="4"/>
+                <rect x="128" y="56" width="4" height="4"/><rect x="96" y="64" width="4" height="4"/>
+                <rect x="116" y="60" width="4" height="4"/><rect x="104" y="68" width="4" height="4"/>
+                <rect x="120" y="68" width="4" height="4"/><rect x="96" y="76" width="4" height="4"/>
+                <rect x="52" y="80" width="4" height="4"/><rect x="64" y="80" width="4" height="4"/>
+                <rect x="80" y="80" width="4" height="4"/><rect x="92" y="80" width="4" height="4"/>
+                <rect x="108" y="80" width="4" height="4"/><rect x="124" y="80" width="4" height="4"/>
+                <rect x="52" y="92" width="4" height="4"/><rect x="68" y="92" width="4" height="4"/>
+                <rect x="84" y="88" width="4" height="4"/><rect x="100" y="92" width="4" height="4"/>
+                <rect x="116" y="88" width="4" height="4"/><rect x="60" y="100" width="4" height="4"/>
+                <rect x="76" y="100" width="4" height="4"/><rect x="92" y="100" width="4" height="4"/>
+                <rect x="108" y="96" width="4" height="4"/><rect x="124" y="100" width="4" height="4"/>
+                <rect x="52" y="108" width="4" height="4"/><rect x="68" y="108" width="4" height="4"/>
+                <rect x="84" y="108" width="4" height="4"/><rect x="100" y="108" width="4" height="4"/>
+                <rect x="52" y="120" width="4" height="4"/><rect x="60" y="116" width="4" height="4"/>
+                <rect x="76" y="120" width="4" height="4"/><rect x="92" y="116" width="4" height="4"/>
+                <rect x="108" y="120" width="4" height="4"/><rect x="124" y="116" width="4" height="4"/>
+                <rect x="52" y="128" width="4" height="4"/><rect x="68" y="128" width="4" height="4"/>
+                <rect x="84" y="124" width="4" height="4"/><rect x="100" y="128" width="4" height="4"/>
+                <rect x="116" y="124" width="4" height="4"/><rect x="128" y="128" width="4" height="4"/>
+              </g>
+              <!-- Accent accent on corner -->
+              <rect x="19" y="19" width="14" height="14" fill="#FF5A1E" rx="1"/>
+              <rect x="107" y="19" width="14" height="14" fill="#FF5A1E" rx="1"/>
+              <rect x="19" y="107" width="14" height="14" fill="#FF5A1E" rx="1"/>
+            </svg>
+          </div>
+          <div class="qr-id">AG-M1042-KA-2025</div>
+          <div class="qr-actions" style="margin-top:12px">
+            <button class="btn btn-outline btn-sm">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Télécharger
+            </button>
+            <button class="btn btn-outline btn-sm">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              WhatsApp
+            </button>
+          </div>
+        </div>
+
+        <!-- Subscription details -->
+        <div class="sub-info">
+          <div class="sub-plan-header">
+            <div class="sub-plan-name">Mensuel Standard</div>
+            <div style="font-size:13px;color:var(--fg-2)">Actif du <strong>1er oct. 2026</strong> au <strong>31 oct. 2026</strong></div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:93%"></div>
+            </div>
+            <div class="progress-labels">
+              <span>1 oct. 2026</span>
+              <span style="color:var(--warn);font-weight:600">⚠ 2 jours restants</span>
+              <span>31 oct. 2026</span>
+            </div>
+          </div>
+          <div class="info-grid">
+            <div class="info-cell">
+              <div class="info-cell-label">Dernier paiement</div>
+              <div class="info-cell-val">25 000 FCFA</div>
+            </div>
+            <div class="info-cell">
+              <div class="info-cell-label">Mode de paiement</div>
+              <div class="info-cell-val">Orange Money</div>
+            </div>
+            <div class="info-cell">
+              <div class="info-cell-label">Entrées ce mois</div>
+              <div class="info-cell-val">18 visites</div>
+            </div>
+            <div class="info-cell">
+              <div class="info-cell-label">Dernière entrée</div>
+              <div class="info-cell-val">Aujourd'hui 08:32</div>
+            </div>
+            <div class="info-cell">
+              <div class="info-cell-label">Total abonnements</div>
+              <div class="info-cell-val">17 mois consécutifs</div>
+            </div>
+            <div class="info-cell">
+              <div class="info-cell-label">Total payé</div>
+              <div class="info-cell-val" style="color:var(--accent);font-variant-numeric:tabular-nums">425 000 FCFA</div>
+            </div>
+          </div>
+          <div style="padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
+              Renouveler l'abonnement
+            </button>
+            <button class="btn btn-outline">Envoyer un rappel</button>
+            <button class="btn btn-outline">Imprimer reçu</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment history -->
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">Historique des paiements</span>
+          <span style="font-size:12px;color:var(--fg-3)">17 transactions</span>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Plan</th>
+                <th>Montant</th>
+                <th>Mode</th>
+                <th>Référence</th>
+                <th>Reçu</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01 oct. 2026</td>
+                <td>Mensuel Standard</td>
+                <td style="font-variant-numeric:tabular-nums;font-weight:600">25 000 FCFA</td>
+                <td>Orange Money</td>
+                <td style="font-family:monospace;font-size:12px;color:var(--fg-3)">OM-2026-78234</td>
+                <td><button class="btn btn-ghost btn-sm">📄 Reçu</button></td>
+              </tr>
+              <tr>
+                <td>01 sep. 2026</td>
+                <td>Mensuel Standard</td>
+                <td style="font-variant-numeric:tabular-nums;font-weight:600">25 000 FCFA</td>
+                <td>Espèces</td>
+                <td style="font-family:monospace;font-size:12px;color:var(--fg-3)">CASH-0901</td>
+                <td><button class="btn btn-ghost btn-sm">📄 Reçu</button></td>
+              </tr>
+              <tr>
+                <td>01 aoû. 2026</td>
+                <td>Mensuel Standard</td>
+                <td style="font-variant-numeric:tabular-nums;font-weight:600">25 000 FCFA</td>
+                <td>MTN MoMo</td>
+                <td style="font-family:monospace;font-size:12px;color:var(--fg-3)">MTN-2026-44109</td>
+                <td><button class="btn btn-ghost btn-sm">📄 Reçu</button></td>
+              </tr>
+              <tr>
+                <td>01 jui. 2026</td>
+                <td>Mensuel Premium</td>
+                <td style="font-variant-numeric:tabular-nums;font-weight:600">35 000 FCFA</td>
+                <td>Orange Money</td>
+                <td style="font-family:monospace;font-size:12px;color:var(--fg-3)">OM-2026-51892</td>
+                <td><button class="btn btn-ghost btn-sm">📄 Reçu</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="sidebar.js"></script>
+</body>

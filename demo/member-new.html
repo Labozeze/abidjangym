@@ -1,0 +1,292 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Nouvel abonné — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+.stepper {
+  display: flex; align-items: center; gap: 0;
+  margin-bottom: 28px; padding: 0;
+}
+.step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; color: var(--fg-3);
+}
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border);
+  display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  background: var(--surface); flex-shrink: 0; transition: all .2s;
+}
+.step.done .step-num { background: var(--ok); border-color: var(--ok); color: white }
+.step.active .step-num { background: var(--accent); border-color: var(--accent); color: white }
+.step.active { color: var(--fg); font-weight: 600 }
+.step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; min-width: 32px }
+.step-line.done { background: var(--ok) }
+.form-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.fs-hd {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.fs-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft);
+  color: var(--accent); font-size: 11px; font-weight: 700; display: grid; place-items: center;
+}
+.fs-title { font-family: var(--fd); font-size: 13px; font-weight: 700 }
+.fs-body { padding: 18px }
+.plan-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 6px }
+.plan-card {
+  border: 2px solid var(--border); border-radius: var(--r); padding: 14px;
+  cursor: pointer; transition: all .12s; position: relative; background: var(--surface);
+}
+.plan-card:hover { border-color: var(--accent) }
+.plan-card.selected { border-color: var(--accent); background: var(--accent-soft) }
+.plan-card.selected::after {
+  content: '✓'; position: absolute; top: 8px; right: 10px;
+  background: var(--accent); color: white; width: 18px; height: 18px; border-radius: 50%;
+  font-size: 10px; display: grid; place-items: center; font-weight: 700;
+}
+.plan-card-name { font-family: var(--fd); font-size: 13px; font-weight: 700; margin-bottom: 4px }
+.plan-card-price { font-size: 15px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums }
+.plan-card-price span { font-size: 11px; font-weight: 500; color: var(--fg-3) }
+.plan-card-desc { font-size: 11px; color: var(--fg-3); margin-top: 4px }
+.pay-methods { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px }
+.pay-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 2px solid var(--border); border-radius: var(--r);
+  cursor: pointer; font-size: 13px; font-weight: 500; background: var(--surface);
+  transition: all .12s;
+}
+.pay-btn.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent) }
+.pay-dot { width: 8px; height: 8px; border-radius: 50%; border: 2px solid currentColor }
+.pay-btn.selected .pay-dot { background: var(--accent); border-color: var(--accent) }
+.footer-bar {
+  position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--border);
+  padding: 14px 0; margin: 0 -24px; padding-left: 24px; padding-right: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 10;
+}
+@media (max-width: 700px) {
+  .plan-cards { grid-template-columns: 1fr 1fr }
+}
+@media (max-width: 480px) {
+  .plan-cards { grid-template-columns: 1fr }
+  .stepper { flex-direction: column; align-items: flex-start; gap: 8px }
+  .step-line { display: none }
+}
+</style>
+</head>
+<body>
+<div id="sb-ov" class="sb-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar-root"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn menu-btn" id="menu-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="tb-page">Nouvel abonné</span>
+      <div class="tb-actions">
+        <a href="members.html" class="btn btn-outline btn-sm">Annuler</a>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="pg-hd">
+        <div>
+          <div class="pg-title">Inscrire un abonné</div>
+          <div class="pg-sub">Remplissez les informations, choisissez un plan et enregistrez le paiement</div>
+        </div>
+      </div>
+
+      <!-- Stepper -->
+      <div class="stepper">
+        <div class="step done">
+          <div class="step-num">✓</div>
+          <span>Profil</span>
+        </div>
+        <div class="step-line done"></div>
+        <div class="step active">
+          <div class="step-num">2</div>
+          <span>Abonnement</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <span>Paiement</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <span>Confirmation</span>
+        </div>
+      </div>
+
+      <form onsubmit="event.preventDefault()">
+        <!-- Section 1: Personal info -->
+        <div class="form-section">
+          <div class="fs-hd">
+            <div class="fs-num">1</div>
+            <span class="fs-title">Informations personnelles</span>
+          </div>
+          <div class="fs-body">
+            <div class="frow">
+              <div class="fgrp">
+                <label class="lbl">Prénom *</label>
+                <input class="inp" type="text" placeholder="Ex. Aya" value="Aya">
+              </div>
+              <div class="fgrp">
+                <label class="lbl">Nom de famille *</label>
+                <input class="inp" type="text" placeholder="Ex. Kouassi" value="Kouassi">
+              </div>
+            </div>
+            <div class="frow">
+              <div class="fgrp">
+                <label class="lbl">Téléphone (WhatsApp/SMS) *</label>
+                <input class="inp" type="tel" placeholder="07 XX XX XX XX" value="07 58 92 14">
+              </div>
+              <div class="fgrp">
+                <label class="lbl">Email</label>
+                <input class="inp" type="email" placeholder="exemple@gmail.com" value="kouassi.aya@gmail.com">
+              </div>
+            </div>
+            <div class="frow">
+              <div class="fgrp">
+                <label class="lbl">Date de naissance</label>
+                <input class="inp" type="date" value="1995-04-12">
+              </div>
+              <div class="fgrp">
+                <label class="lbl">Genre</label>
+                <select class="sel">
+                  <option>Non précisé</option>
+                  <option selected>Femme</option>
+                  <option>Homme</option>
+                </select>
+              </div>
+            </div>
+            <div class="fgrp">
+              <label class="lbl">Notes internes</label>
+              <textarea class="ta" rows="2" placeholder="Informations particulières, blessures, préférences…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Plan -->
+        <div class="form-section">
+          <div class="fs-hd">
+            <div class="fs-num">2</div>
+            <span class="fs-title">Plan d'abonnement *</span>
+          </div>
+          <div class="fs-body">
+            <div class="plan-cards" id="planCards">
+              <div class="plan-card" onclick="selectPlan(this)">
+                <div class="plan-card-name">Pass Journée</div>
+                <div class="plan-card-price">2 000 <span>FCFA</span></div>
+                <div class="plan-card-desc">Accès pour 1 journée</div>
+              </div>
+              <div class="plan-card" onclick="selectPlan(this)">
+                <div class="plan-card-name">Pass Hebdo</div>
+                <div class="plan-card-price">8 000 <span>FCFA</span></div>
+                <div class="plan-card-desc">7 jours d'accès illimité</div>
+              </div>
+              <div class="plan-card selected" onclick="selectPlan(this)">
+                <div class="plan-card-name">Mensuel Standard</div>
+                <div class="plan-card-price">25 000 <span>FCFA</span></div>
+                <div class="plan-card-desc">30 jours d'accès illimité</div>
+              </div>
+              <div class="plan-card" onclick="selectPlan(this)">
+                <div class="plan-card-name">Mensuel Premium</div>
+                <div class="plan-card-price">35 000 <span>FCFA</span></div>
+                <div class="plan-card-desc">30 jours · coaching inclus</div>
+              </div>
+              <div class="plan-card" onclick="selectPlan(this)">
+                <div class="plan-card-name">Pack 10 séances</div>
+                <div class="plan-card-price">20 000 <span>FCFA</span></div>
+                <div class="plan-card-desc">10 jours dans 60 jours</div>
+              </div>
+            </div>
+            <div class="frow" style="margin-top:14px">
+              <div class="fgrp">
+                <label class="lbl">Date de début</label>
+                <input class="inp" type="date" value="2026-10-29">
+              </div>
+              <div class="fgrp">
+                <label class="lbl">Date de fin (calculée auto)</label>
+                <input class="inp" type="date" value="2026-11-28" readonly style="background:var(--surface-2)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Payment -->
+        <div class="form-section">
+          <div class="fs-hd">
+            <div class="fs-num">3</div>
+            <span class="fs-title">Paiement</span>
+          </div>
+          <div class="fs-body">
+            <div class="fgrp">
+              <label class="lbl">Mode de paiement *</label>
+              <div class="pay-methods" id="payMethods">
+                <div class="pay-btn" onclick="selectPay(this)"><span class="pay-dot"></span>Espèces</div>
+                <div class="pay-btn selected" onclick="selectPay(this)"><span class="pay-dot"></span>Orange Money</div>
+                <div class="pay-btn" onclick="selectPay(this)"><span class="pay-dot"></span>MTN MoMo</div>
+                <div class="pay-btn" onclick="selectPay(this)"><span class="pay-dot"></span>Wave</div>
+                <div class="pay-btn" onclick="selectPay(this)"><span class="pay-dot"></span>Carte bancaire</div>
+              </div>
+            </div>
+            <div class="frow">
+              <div class="fgrp">
+                <label class="lbl">Montant payé (FCFA) *</label>
+                <input class="inp" type="number" value="25000" style="font-variant-numeric:tabular-nums">
+              </div>
+              <div class="fgrp">
+                <label class="lbl">Référence de transaction</label>
+                <input class="inp" type="text" placeholder="Ex. OM-2026-XXXXX" value="OM-2026-78234">
+              </div>
+            </div>
+            <div class="frow">
+              <div class="fgrp" style="display:flex;align-items:center;gap:8px;padding-top:4px">
+                <input type="checkbox" id="sendReceipt" checked style="width:16px;height:16px;accent-color:var(--accent)">
+                <label for="sendReceipt" style="font-size:13px;cursor:pointer">Envoyer le reçu par WhatsApp</label>
+              </div>
+              <div class="fgrp" style="display:flex;align-items:center;gap:8px;padding-top:4px">
+                <input type="checkbox" id="sendQR" checked style="width:16px;height:16px;accent-color:var(--accent)">
+                <label for="sendQR" style="font-size:13px;cursor:pointer">Envoyer le QR code par WhatsApp</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer actions -->
+        <div class="footer-bar">
+          <a href="members.html" class="btn btn-outline">← Retour</a>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="font-size:13px;color:var(--fg-2)">Montant total : <strong style="color:var(--accent);font-variant-numeric:tabular-nums">25 000 FCFA</strong></div>
+            <a href="member-detail.html" class="btn btn-primary btn-lg">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Confirmer l'inscription
+            </a>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+<script src="sidebar.js"></script>
+<script>
+function selectPlan(el) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectPay(el) {
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>

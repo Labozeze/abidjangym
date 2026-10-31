@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Contact — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,700;0,800;0,900;1,800;1,900&family=DM+Sans:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #FFFFFF; --bg-2: #F5F7FB; --bg-3: #EEF1F8;
+  --surface: #FFFFFF; --border: #E2E8F0;
+  --fg: #0A0D14; --fg-2: #3D4A60; --fg-3: #7A8AA0;
+  --accent: #FF5A1E; --accent-h: #E84A10;
+  --accent-soft: rgba(255,90,30,.09); --accent-glow: rgba(255,90,30,.25);
+  --ok: #16A34A; --ok-bg: rgba(22,163,74,.09);
+  --fd: 'Plus Jakarta Sans', sans-serif; --fb: 'DM Sans', sans-serif;
+  --ease: cubic-bezier(.22,1,.36,1);
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+html { scroll-behavior: smooth }
+body { font-family: var(--fb); background: var(--bg); color: var(--fg); overflow-x: hidden }
+a { text-decoration: none }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  padding: 0 max(24px, env(safe-area-inset-left,0px));
+  background: rgba(255,255,255,.93); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 16px rgba(0,0,0,.06);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 68px; gap: 16px;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px }
+.logo-mark {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--accent); display: grid; place-items: center;
+}
+.logo-name { font-family: var(--fd); font-size: 18px; font-weight: 900; color: var(--fg) }
+.logo-name em { color: var(--accent); font-style: normal }
+.nav-links { display: flex; gap: 32px }
+.nav-links a {
+  font-size: 13px; font-weight: 700; color: var(--fg-2);
+  letter-spacing: .02em; text-transform: uppercase; transition: color .2s;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--accent) }
+.nav-cta { display: flex; gap: 10px; align-items: center }
+.btn-ghost-nav {
+  padding: 9px 20px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-family: var(--fd); font-size: 12px; font-weight: 700;
+  color: var(--fg-2); background: transparent; letter-spacing: .04em;
+  text-transform: uppercase; transition: all .2s;
+}
+.btn-ghost-nav:hover { border-color: var(--accent); color: var(--accent) }
+.btn-accent-nav {
+  padding: 9px 22px; border: none; border-radius: 8px;
+  font-family: var(--fd); font-size: 12px; font-weight: 800;
+  background: var(--accent); color: white; letter-spacing: .04em; text-transform: uppercase;
+  transition: background .2s; display: inline-block;
+}
+.btn-accent-nav:hover { background: var(--accent-h) }
+@media (max-width: 768px) {
+  .nav-links { display: none }
+  .btn-ghost-nav { display: none }
+}
+
+/* SCROLL REVEAL */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s var(--ease), transform .65s var(--ease) }
+.reveal.in { opacity: 1; transform: none }
+.reveal-l { opacity: 0; transform: translateX(-36px); transition: opacity .65s var(--ease), transform .65s var(--ease) }
+.reveal-l.in { opacity: 1; transform: none }
+.reveal-r { opacity: 0; transform: translateX(36px); transition: opacity .65s var(--ease), transform .65s var(--ease) }
+.reveal-r.in { opacity: 1; transform: none }
+
+/* PAGE HERO */
+.page-hero {
+  padding: 140px max(24px, env(safe-area-inset-left,0px)) 80px;
+  background: var(--bg-2);
+  position: relative; overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.page-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(10,13,20,.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
+}
+.page-hero::after {
+  content: '';
+  position: absolute; top: -120px; right: -80px;
+  width: 480px; height: 480px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,90,30,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.page-hero-inner {
+  max-width: 760px; margin: 0 auto; position: relative; z-index: 1; text-align: center;
+}
+.eyebrow {
+  display: inline-block; font-family: var(--fd); font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+  background: var(--accent-soft); padding: 5px 14px; border-radius: 20px; margin-bottom: 18px;
+}
+.page-title {
+  font-family: var(--fd); font-size: clamp(36px, 6vw, 62px); font-weight: 900;
+  font-style: italic; text-transform: uppercase; letter-spacing: -.02em;
+  line-height: 1.05; color: var(--fg); text-wrap: balance; margin-bottom: 18px;
+}
+.page-title em { color: var(--accent); font-style: italic }
+.page-sub { font-size: 16px; color: var(--fg-2); line-height: 1.65; max-width: 520px; margin: 0 auto }
+
+/* MAIN CONTENT */
+.contact-section {
+  padding: 80px max(24px, env(safe-area-inset-left,0px)) 100px;
+}
+.contact-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 420px; gap: 64px; align-items: start;
+}
+
+/* FORM */
+.contact-form-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 40px;
+  box-shadow: 0 4px 24px rgba(16,28,60,.06);
+}
+.form-head { margin-bottom: 28px }
+.form-head h2 { font-family: var(--fd); font-size: 20px; font-weight: 800; margin-bottom: 4px }
+.form-head p { font-size: 13px; color: var(--fg-3) }
+
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px }
+.field label { font-family: var(--fd); font-size: 12px; font-weight: 700; color: var(--fg-2); text-transform: uppercase; letter-spacing: .04em }
+.inp {
+  padding: 11px 14px; background: var(--bg-2); border: 1.5px solid var(--border);
+  border-radius: 10px; font-family: var(--fb); font-size: 14px; color: var(--fg);
+  transition: border-color .15s, background .15s; outline: none; width: 100%;
+}
+.inp:focus { border-color: var(--accent); background: var(--surface) }
+.inp::placeholder { color: var(--fg-3) }
+select.inp { cursor: pointer }
+textarea.inp { resize: vertical; min-height: 130px; line-height: 1.6 }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px }
+
+.btn-submit {
+  width: 100%; padding: 14px; border: none; border-radius: 10px;
+  font-family: var(--fd); font-size: 15px; font-weight: 800;
+  background: var(--accent); color: white; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .2s, box-shadow .2s, transform .1s;
+  box-shadow: 0 4px 18px var(--accent-glow);
+  text-transform: uppercase; letter-spacing: .04em; margin-top: 8px;
+}
+.btn-submit:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 6px 24px var(--accent-glow) }
+
+.form-success {
+  display: none; text-align: center; padding: 40px 20px;
+}
+.form-success.active { display: block }
+.success-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--ok-bg); display: grid; place-items: center;
+  margin: 0 auto 16px; color: var(--ok);
+}
+.success-title { font-family: var(--fd); font-size: 20px; font-weight: 900; margin-bottom: 8px }
+.success-sub { font-size: 14px; color: var(--fg-2); line-height: 1.6 }
+
+/* SIDEBAR INFO */
+.contact-info { display: flex; flex-direction: column; gap: 16px }
+
+.info-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px;
+  box-shadow: 0 2px 12px rgba(16,28,60,.05);
+  transition: box-shadow .2s, transform .2s;
+}
+.info-card:hover { box-shadow: 0 8px 32px rgba(16,28,60,.09); transform: translateY(-2px) }
+.info-card-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: grid; place-items: center; margin-bottom: 14px; flex-shrink: 0;
+}
+.info-card h3 { font-family: var(--fd); font-size: 14px; font-weight: 800; margin-bottom: 4px }
+.info-card p { font-size: 13px; color: var(--fg-2); line-height: 1.5; margin-bottom: 12px }
+.info-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--fd); font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em;
+  transition: opacity .15s;
+}
+.info-link:hover { opacity: .75 }
+
+/* Photo card */
+.photo-card {
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  position: relative;
+}
+.photo-card img {
+  width: 100%; display: block;
+  aspect-ratio: 4/3; object-fit: cover; object-position: center 25%;
+}
+.photo-card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,13,20,.8) 0%, transparent 55%);
+}
+.photo-card-text {
+  position: absolute; bottom: 18px; left: 18px; right: 18px;
+}
+.photo-card-text p {
+  font-family: var(--fd); font-size: 15px; font-weight: 800;
+  font-style: italic; text-transform: uppercase; color: white;
+  letter-spacing: -.01em; line-height: 1.2; margin-bottom: 4px;
+}
+.photo-card-text span { font-size: 12px; color: rgba(255,255,255,.65) }
+
+/* FOOTER */
+footer {
+  background: var(--fg); padding: 48px max(24px, env(safe-area-inset-left,0px)) 32px;
+}
+.footer-inner { max-width: 1200px; margin: 0 auto }
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  font-size: 12px; color: rgba(255,255,255,.35);
+  padding-top: 24px; border-top: 1px solid rgba(255,255,255,.08);
+}
+.footer-bottom a { color: rgba(255,255,255,.35); transition: color .15s }
+.footer-bottom a:hover { color: rgba(255,255,255,.65) }
+.footer-brand-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.footer-logo-mark {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--accent); display: grid; place-items: center;
+}
+.footer-brand-name { font-family: var(--fd); font-size: 16px; font-weight: 900; color: white }
+.footer-brand-name em { color: var(--accent); font-style: normal }
+.footer-tagline { font-size: 13px; color: rgba(255,255,255,.45); margin-bottom: 24px }
+
+@media (max-width: 900px) {
+  .contact-grid { grid-template-columns: 1fr; gap: 40px }
+  .contact-info { order: -1 }
+}
+@media (max-width: 560px) {
+  .contact-form-wrap { padding: 24px 20px }
+  .field-row { grid-template-columns: 1fr }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="landing.html" class="nav-logo">
+      <div class="logo-mark">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 8h2M16 8h2M6 16h2M16 16h2M8 8h8M8 16h8"/></svg>
+      </div>
+      <span class="logo-name">Abidjan<em>Gym</em></span>
+    </a>
+    <div class="nav-links">
+      <a href="landing.html#fonctionnalites">Fonctionnalités</a>
+      <a href="landing.html#tarifs">Tarifs</a>
+      <a href="landing.html#temoignages">Avis</a>
+      <a href="contact.html" class="active">Contact</a>
+    </div>
+    <div class="nav-cta">
+      <a href="dashboard.html" class="btn-ghost-nav">Voir la démo</a>
+      <a href="onboarding.html" class="btn-accent-nav">J'inscris ma salle</a>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <div class="eyebrow reveal">Contact</div>
+    <h1 class="page-title reveal">Parlons de<br><em>votre salle</em></h1>
+    <p class="page-sub reveal">Notre équipe est basée à Abidjan. On vous répond en moins de 24h sur WhatsApp ou par email.</p>
+  </div>
+</div>
+
+<!-- CONTACT SECTION -->
+<section class="contact-section">
+  <div class="contact-grid">
+
+    <!-- FORM -->
+    <div class="contact-form-wrap reveal-l">
+      <div id="form-body">
+        <div class="form-head">
+          <h2>Envoyez-nous un message</h2>
+          <p>Démo, partenariat, support technique — on est là.</p>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Prénom</label>
+            <input class="inp" type="text" placeholder="Konan">
+          </div>
+          <div class="field">
+            <label>Nom</label>
+            <input class="inp" type="text" placeholder="Bamba">
+          </div>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input class="inp" type="email" placeholder="konan@masal le.ci">
+        </div>
+        <div class="field">
+          <label>Téléphone / WhatsApp</label>
+          <input class="inp" type="tel" placeholder="+225 07 00 00 00 00">
+        </div>
+        <div class="field">
+          <label>Objet</label>
+          <select class="inp" id="objet">
+            <option value="">Choisir un sujet...</option>
+            <option value="demo">Demande de démo</option>
+            <option value="tarif">Question sur les tarifs</option>
+            <option value="support">Support technique</option>
+            <option value="partenariat">Partenariat</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Message</label>
+          <textarea class="inp" placeholder="Décrivez votre salle, vos besoins, vos questions..."></textarea>
+        </div>
+        <button class="btn-submit" onclick="submitForm()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Envoyer le message
+        </button>
+      </div>
+      <div class="form-success" id="form-success">
+        <div class="success-icon">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="success-title">Message envoyé !</div>
+        <p class="success-sub">Merci, on vous revient dans les 24h. Pour une réponse plus rapide, écrivez-nous directement sur <strong>WhatsApp</strong>.</p>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="contact-info">
+
+      <!-- Photo -->
+      <div class="photo-card reveal-r">
+        <img src="../photos/u9482158516_African_gym_owner_looking_at_a_tabletphone_with_f_cba56b83-f32e-4e81-bc60-866f26a8d3bc_1.png"
+             alt="Équipe AbidjanGym — Abidjan">
+        <div class="photo-card-overlay"></div>
+        <div class="photo-card-text">
+          <p>Notre équipe à Abidjan</p>
+          <span>Toujours disponibles sur WhatsApp</span>
+        </div>
+      </div>
+
+      <!-- WhatsApp -->
+      <div class="info-card reveal-r" style="transition-delay:.08s">
+        <div class="info-card-icon" style="background:rgba(22,163,74,.1)">
+          <svg width="22" height="22" fill="none" stroke="#16A34A" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>WhatsApp — réponse rapide</h3>
+        <p>Écrivez-nous directement. Disponibles du lundi au samedi, 8h–20h (heure d'Abidjan).</p>
+        <a href="#" class="info-link" style="color:var(--ok)">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Ouvrir WhatsApp →
+        </a>
+      </div>
+
+      <!-- Email -->
+      <div class="info-card reveal-r" style="transition-delay:.16s">
+        <div class="info-card-icon" style="background:var(--accent-soft)">
+          <svg width="22" height="22" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <h3>Email</h3>
+        <p>Pour les demandes de partenariat, devis détaillé ou questions administratives.</p>
+        <span class="info-link" style="color:var(--accent);cursor:default">contact@abidjangym.com</span>
+      </div>
+
+      <!-- Adresse -->
+      <div class="info-card reveal-r" style="transition-delay:.24s">
+        <div class="info-card-icon" style="background:rgba(99,102,241,.09)">
+          <svg width="22" height="22" fill="none" stroke="#6366F1" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <h3>Abidjan, Côte d'Ivoire 🇨🇮</h3>
+        <p>Cocody, Abidjan. On se déplace aussi dans toute la ville pour les démos sur site.</p>
+        <span class="info-link" style="color:#6366F1;cursor:default">Cocody, Abidjan CI</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand-row">
+      <div class="footer-logo-mark">
+        <svg width="17" height="17" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 8h2M16 8h2M6 16h2M16 16h2M8 8h8M8 16h8"/></svg>
+      </div>
+      <span class="footer-brand-name">Abidjan<em>Gym</em></span>
+    </div>
+    <p class="footer-tagline">La plateforme de gestion de salles de sport pensée pour l'Afrique de l'Ouest.</p>
+    <div class="footer-bottom">
+      <span>© 2026 AbidjanGym · Le Labo de Zézé, Abidjan 🇨🇮</span>
+      <div style="display:flex;gap:16px">
+        <a href="#">Facebook</a>
+        <a href="#">Instagram</a>
+        <a href="#">WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -32px 0px' });
+document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el => io.observe(el));
+
+function submitForm() {
+  document.getElementById('form-body').style.display = 'none';
+  document.getElementById('form-success').classList.add('active');
+}
+</script>
+</body>
+</html>

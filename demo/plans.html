@@ -1,0 +1,269 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Plans — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+.plans-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 16px; margin-bottom: 24px }
+.plan-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden;
+  transition: border-color .15s, box-shadow .15s;
+}
+.plan-card:hover { border-color: var(--accent); box-shadow: 0 4px 24px rgba(255,90,30,.1) }
+.pc-stripe { height: 4px }
+.pc-body { padding: 18px }
+.pc-type {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.pc-name { font-family: var(--fd); font-size: 17px; font-weight: 800; margin-bottom: 6px }
+.pc-price { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; margin-bottom: 4px }
+.pc-price span { font-size: 13px; font-weight: 500; color: var(--fg-3) }
+.pc-desc { font-size: 12px; color: var(--fg-3); line-height: 1.6; margin-bottom: 14px }
+.pc-meta { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px }
+.pc-meta-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-2) }
+.pc-meta-row svg { color: var(--ok); flex-shrink: 0 }
+.pc-foot {
+  padding: 12px 18px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.pc-cnt { font-size: 12px; color: var(--fg-3) }
+.pc-cnt strong { color: var(--fg); font-variant-numeric: tabular-nums }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,18,32,.6);
+  z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal { background: var(--surface); border-radius: var(--r-xl); box-shadow: 0 20px 60px rgba(0,0,0,.3); width: 100%; max-width: 500px; max-height: 90svh; overflow-y: auto }
+.modal-hd { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center }
+.modal-title { font-family: var(--fd); font-size: 16px; font-weight: 800 }
+.modal-body { padding: 20px }
+.modal-ft { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px }
+[hidden] { display: none !important }
+</style>
+</head>
+<body>
+<div id="sb-ov" class="sb-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar-root"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn menu-btn" id="menu-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="tb-page">Plans d'abonnement</span>
+      <div class="tb-actions">
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('modal').hidden=false">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau plan
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="pg-hd">
+        <div>
+          <div class="pg-title">Plans</div>
+          <div class="pg-sub">5 plans configurés · Personnalisez vos offres d'abonnement</div>
+        </div>
+        <button class="btn btn-primary" onclick="document.getElementById('modal').hidden=false">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau plan
+        </button>
+      </div>
+
+      <div class="plans-grid">
+
+        <!-- Plan 1 -->
+        <div class="plan-card">
+          <div class="pc-stripe" style="background:linear-gradient(90deg,#3B82F6,#60A5FA)"></div>
+          <div class="pc-body">
+            <div class="pc-type" style="color:#3B82F6">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Journalier
+            </div>
+            <div class="pc-name">Pass Journée</div>
+            <div class="pc-price">2 000 <span>FCFA</span></div>
+            <div class="pc-desc">Accès illimité à la salle pour une journée complète. Idéal pour les visiteurs ou les essais.</div>
+            <div class="pc-meta">
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Valide le jour de l'activation</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>QR code inclus</div>
+            </div>
+          </div>
+          <div class="pc-foot">
+            <span class="pc-cnt"><strong>14</strong> abonnés actifs</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm">Modifier</button>
+              <span class="badge b-ok">Actif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan 2 -->
+        <div class="plan-card">
+          <div class="pc-stripe" style="background:linear-gradient(90deg,#8B5CF6,#A78BFA)"></div>
+          <div class="pc-body">
+            <div class="pc-type" style="color:#8B5CF6">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+              Hebdomadaire
+            </div>
+            <div class="pc-name">Pass Hebdo</div>
+            <div class="pc-price">8 000 <span>FCFA</span></div>
+            <div class="pc-desc">Accès illimité pendant 7 jours consécutifs à partir de la date d'activation.</div>
+            <div class="pc-meta">
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>7 jours calendaires</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>QR code + notifications</div>
+            </div>
+          </div>
+          <div class="pc-foot">
+            <span class="pc-cnt"><strong>31</strong> abonnés actifs</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm">Modifier</button>
+              <span class="badge b-ok">Actif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan 3 — popular -->
+        <div class="plan-card" style="border-color:var(--accent)">
+          <div class="pc-stripe" style="background:linear-gradient(90deg,#FF5A1E,#FF8C4A)"></div>
+          <div class="pc-body">
+            <div class="pc-type" style="color:var(--accent)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Mensuel · Le plus populaire
+            </div>
+            <div class="pc-name">Mensuel Standard</div>
+            <div class="pc-price">25 000 <span>FCFA</span></div>
+            <div class="pc-desc">Accès illimité pendant 30 jours. Le plan préféré de nos membres réguliers.</div>
+            <div class="pc-meta">
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>30 jours calendaires</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Rappels automatiques J-7, J-3, J-1</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>QR code + reçu WhatsApp</div>
+            </div>
+          </div>
+          <div class="pc-foot">
+            <span class="pc-cnt"><strong>142</strong> abonnés actifs</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm">Modifier</button>
+              <span class="badge b-ok">Actif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan 4 -->
+        <div class="plan-card">
+          <div class="pc-stripe" style="background:linear-gradient(90deg,#F59E0B,#FBBF24)"></div>
+          <div class="pc-body">
+            <div class="pc-type" style="color:#B45309">
+              <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Mensuel Premium
+            </div>
+            <div class="pc-name">Mensuel Premium</div>
+            <div class="pc-price">35 000 <span>FCFA</span></div>
+            <div class="pc-desc">Accès illimité 30 jours avec suivi nutritionnel et coaching personnalisé inclus.</div>
+            <div class="pc-meta">
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>30 jours + coaching</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Programme nutritionnel</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Toutes les options incluses</div>
+            </div>
+          </div>
+          <div class="pc-foot">
+            <span class="pc-cnt"><strong>48</strong> abonnés actifs</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm">Modifier</button>
+              <span class="badge b-ok">Actif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan 5 -->
+        <div class="plan-card">
+          <div class="pc-stripe" style="background:linear-gradient(90deg,#10B981,#34D399)"></div>
+          <div class="pc-body">
+            <div class="pc-type" style="color:#059669">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              Pack de jours
+            </div>
+            <div class="pc-name">Pack 10 séances</div>
+            <div class="pc-price">20 000 <span>FCFA</span></div>
+            <div class="pc-desc">10 journées d'accès à utiliser sur une période de 60 jours. Idéal pour les irréguliers.</div>
+            <div class="pc-meta">
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>10 jours dans 60 jours</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Compteur de jours restants</div>
+              <div class="pc-meta-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Rappel automatique à 3 jours restants</div>
+            </div>
+          </div>
+          <div class="pc-foot">
+            <span class="pc-cnt"><strong>12</strong> abonnés actifs</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-outline btn-sm">Modifier</button>
+              <span class="badge b-ok">Actif</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal nouveau plan -->
+<div id="modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">Créer un nouveau plan</span>
+      <button class="tb-btn" onclick="document.getElementById('modal').hidden=true">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="fgrp">
+        <label class="lbl">Nom du plan *</label>
+        <input class="inp" type="text" placeholder="Ex. Mensuel Étudiant">
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <label class="lbl">Type *</label>
+          <select class="sel">
+            <option>Journalier</option>
+            <option>Hebdomadaire</option>
+            <option selected>Mensuel</option>
+            <option>Pack de jours</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="lbl">Prix (FCFA) *</label>
+          <input class="inp" type="number" placeholder="25000" style="font-variant-numeric:tabular-nums">
+        </div>
+      </div>
+      <div id="packOptions" class="frow" style="display:none">
+        <div class="fgrp">
+          <label class="lbl">Nombre de jours inclus</label>
+          <input class="inp" type="number" placeholder="10">
+        </div>
+        <div class="fgrp">
+          <label class="lbl">Validité (jours)</label>
+          <input class="inp" type="number" placeholder="60">
+        </div>
+      </div>
+      <div class="fgrp">
+        <label class="lbl">Description courte</label>
+        <textarea class="ta" rows="2" placeholder="Description visible par les caissiers…"></textarea>
+      </div>
+      <div class="fgrp" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="active" checked style="width:16px;height:16px;accent-color:var(--accent)">
+        <label for="active" style="font-size:13px;cursor:pointer">Plan actif (visible pour les inscriptions)</label>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-outline" onclick="document.getElementById('modal').hidden=true">Annuler</button>
+      <button class="btn btn-primary" onclick="document.getElementById('modal').hidden=true">Créer le plan</button>
+    </div>
+  </div>
+</div>
+
+<script src="sidebar.js"></script>
+</body>

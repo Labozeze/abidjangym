@@ -1,0 +1,48 @@
+# --- Secrets : ne JAMAIS versionner (dépôt public) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+auth.json
+
+# --- Sauvegardes et données ---
+*.sql
+*.sql.gz
+*.sqlite
+*.dump
+backups/
+
+# --- Frontend (Nuxt) ---
+node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/dist/
+frontend/.data/
+
+# --- Backend (Laravel) ---
+backend/vendor/
+backend/storage/*.key
+backend/storage/logs/
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/bootstrap/cache/*.php
+backend/public/storage
+backend/.phpunit.result.cache
+
+# --- Tests ---
+tests/node_modules/
+tests/test-results/
+tests/playwright-report/
+coverage/
+
+# --- Outils et systèmes ---
+.claude/settings.local.json
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db

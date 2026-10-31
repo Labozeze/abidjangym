@@ -1,0 +1,229 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Abonnés — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap }
+.toolbar .s-wrap { flex: 1; min-width: 200px; max-width: 320px }
+.filters { display: flex; gap: 6px; flex-wrap: wrap }
+.filter-btn {
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--fg-2);
+  cursor: pointer; transition: all .12s;
+}
+.filter-btn.active { background: var(--accent); color: white; border-color: var(--accent) }
+.member-num { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--fg-3) }
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--fg-2);
+}
+.pag-btns { display: flex; gap: 4px }
+.pag-btn {
+  width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border);
+  background: transparent; font-size: 13px; color: var(--fg-2);
+  display: grid; place-items: center; cursor: pointer; transition: all .12s;
+}
+.pag-btn.active { background: var(--accent); color: white; border-color: var(--accent) }
+.pag-btn:hover:not(.active) { background: var(--surface-2) }
+.actions-cell { display: flex; gap: 4px }
+</style>
+</head>
+<body>
+<div id="sb-ov" class="sb-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar-root"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn menu-btn" id="menu-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="tb-page">Abonnés</span>
+      <div class="tb-actions">
+        <button class="tb-btn" title="Exporter">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <a href="member-new.html" class="btn btn-primary btn-sm">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter
+        </a>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="pg-hd">
+        <div>
+          <div class="pg-title">Abonnés</div>
+          <div class="pg-sub">247 membres au total · 224 actifs · 15 expirés · 8 suspendus</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="s-wrap">
+          <svg class="s-ic" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="inp" type="search" placeholder="Rechercher par nom, tél, n° membre…">
+        </div>
+        <div class="filters">
+          <button class="filter-btn active">Tous (247)</button>
+          <button class="filter-btn">Actifs (224)</button>
+          <button class="filter-btn">Expirés (15)</button>
+          <button class="filter-btn">Suspendus (8)</button>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtrer
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Membre</th>
+                <th>N° membre</th>
+                <th>Téléphone</th>
+                <th>Plan actuel</th>
+                <th>Statut</th>
+                <th>Expiration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-1">KA</div><div><div style="font-weight:600">Kouassi Aya</div><div style="font-size:11px;color:var(--fg-3)">kouassi.aya@gmail.com</div></div></div></td>
+                <td class="member-num">#M-1042</td>
+                <td>07 58 92 14</td>
+                <td>Mensuel Standard</td>
+                <td><span class="badge b-ok">Actif</span></td>
+                <td style="font-variant-numeric:tabular-nums">31 oct. 2026</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm" title="Voir fiche">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </a>
+                  <button class="btn-icon-sm" title="Renouveler">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>
+                  </button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-2">BS</div><div><div style="font-weight:600">Bamba Seydou</div><div style="font-size:11px;color:var(--fg-3)">s.bamba@hotmail.com</div></div></div></td>
+                <td class="member-num">#M-0987</td>
+                <td>05 22 87 33</td>
+                <td>Mensuel Premium</td>
+                <td><span class="badge b-ok">Actif</span></td>
+                <td>01 nov. 2026</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                  <button class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-3">KF</div><div><div style="font-weight:600">Koné Fatoumata</div><div style="font-size:11px;color:var(--fg-3)">f.kone@yahoo.fr</div></div></div></td>
+                <td class="member-num">#M-1156</td>
+                <td>01 47 63 28</td>
+                <td>Pack 10 séances</td>
+                <td><span class="badge b-ok">Actif</span></td>
+                <td>02 nov. 2026</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                  <button class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-4">YP</div><div><div style="font-weight:600">Yao Pierre</div><div style="font-size:11px;color:var(--fg-3)">pierre.yao@gmail.com</div></div></div></td>
+                <td class="member-num">#M-0731</td>
+                <td>07 01 45 90</td>
+                <td>Mensuel Standard</td>
+                <td><span class="badge b-warn">Expire J+5</span></td>
+                <td>03 nov. 2026</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                  <button class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-5">TA</div><div><div style="font-weight:600">Traoré Aminata</div><div style="font-size:11px;color:var(--fg-3)">aminata.traore@gmail.com</div></div></div></td>
+                <td class="member-num">#M-1203</td>
+                <td>05 78 12 66</td>
+                <td>Hebdomadaire</td>
+                <td><span class="badge b-ok">Actif</span></td>
+                <td>04 nov. 2026</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                  <button class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-6">DM</div><div><div style="font-weight:600">Diallo Mamadou</div><div style="font-size:11px;color:var(--fg-3)">m.diallo@yahoo.fr</div></div></div></td>
+                <td class="member-num">#M-1299</td>
+                <td>07 33 55 80</td>
+                <td>Mensuel Standard</td>
+                <td><span class="badge b-ok">Actif</span></td>
+                <td>28 nov. 2026</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                  <button class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-1">CJ</div><div><div style="font-weight:600">Coulibaly Jean</div><div style="font-size:11px;color:var(--fg-3)">jean.c@gmail.com</div></div></div></td>
+                <td class="member-num">#M-0812</td>
+                <td>01 90 72 44</td>
+                <td>Mensuel Premium</td>
+                <td><span class="badge b-bad">Expiré</span></td>
+                <td>18 oct. 2026</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                  <button class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg></button>
+                </div></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-3">OB</div><div><div style="font-weight:600">Ouattara Brahima</div><div style="font-size:11px;color:var(--fg-3)">brahima.o@outlook.com</div></div></div></td>
+                <td class="member-num">#M-1078</td>
+                <td>05 46 18 93</td>
+                <td>Pack 10 séances</td>
+                <td><span class="badge b-muted">Suspendu</span></td>
+                <td>—</td>
+                <td><div class="actions-cell">
+                  <a href="member-detail.html" class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
+                  <button class="btn-icon-sm"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg></button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span>Affichage 1–8 sur 247</span>
+          <div class="pag-btns">
+            <button class="pag-btn" disabled>&lsaquo;</button>
+            <button class="pag-btn active">1</button>
+            <button class="pag-btn">2</button>
+            <button class="pag-btn">3</button>
+            <span style="padding:0 4px;color:var(--fg-3)">…</span>
+            <button class="pag-btn">31</button>
+            <button class="pag-btn">&rsaquo;</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="sidebar.js"></script>
+<script>
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+</body>

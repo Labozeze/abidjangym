@@ -1,0 +1,13 @@
+# Fins de ligne normalisées (LF) pour tous les outils et la CI Linux
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

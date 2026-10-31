@@ -1,0 +1,331 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Scan QR — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+.scan-layout {
+  display: grid; grid-template-columns: 1fr 360px; gap: 20px;
+  align-items: start;
+}
+.viewfinder-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xl); box-shadow: var(--shadow); overflow: hidden;
+}
+.vf-bar {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.vf-title { font-family: var(--fd); font-weight: 700; font-size: 14px }
+.live-dot {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--ok);
+}
+.live-dot::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ok);
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1 }
+  50% { opacity: .3 }
+}
+.viewfinder {
+  background: #0A0E1A; position: relative; aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
+}
+/* Simulated camera scan area */
+.scan-box {
+  width: 200px; height: 200px; position: relative;
+}
+.scan-box::before, .scan-box::after {
+  content: ''; position: absolute;
+  width: 28px; height: 28px;
+  border-color: #FF5A1E; border-style: solid;
+}
+.scan-box::before { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0 }
+.scan-box::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0 }
+.sc-tl, .sc-tr, .sc-bl, .sc-br {
+  position: absolute; width: 28px; height: 28px;
+  border-color: #FF5A1E; border-style: solid;
+}
+.sc-tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0 }
+.sc-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px }
+.scan-line {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #FF5A1E 20%, #FF8C4A 50%, #FF5A1E 80%, transparent);
+  animation: scanline 2s ease-in-out infinite; top: 50%;
+  box-shadow: 0 0 8px rgba(255,90,30,.6);
+}
+@keyframes scanline {
+  0% { transform: translateY(-90px) }
+  50% { transform: translateY(90px) }
+  100% { transform: translateY(-90px) }
+}
+.vf-overlay {
+  position: absolute; inset: 0;
+  background: rgba(10,14,26,0.55);
+  display: flex; align-items: center; justify-content: center;
+}
+/* The clear center area */
+.vf-overlay::before {
+  content: ''; position: absolute;
+  width: 220px; height: 220px;
+  background: transparent;
+  box-shadow: 0 0 0 400px rgba(10,14,26,0.55);
+  border-radius: 8px;
+}
+.vf-hint {
+  position: absolute; bottom: 16px;
+  font-size: 12px; color: rgba(255,255,255,.55); letter-spacing: .02em;
+}
+
+/* Result states */
+.result-panel {
+  border-top: 1px solid var(--border);
+  padding: 0;
+}
+.result-success {
+  background: linear-gradient(135deg, rgba(22,163,74,.08), transparent);
+  border-top: 3px solid var(--ok);
+  padding: 18px;
+}
+.result-denied {
+  background: linear-gradient(135deg, rgba(220,38,38,.08), transparent);
+  border-top: 3px solid var(--bad);
+  padding: 18px;
+}
+.result-idle {
+  padding: 18px; text-align: center; color: var(--fg-3); font-size: 13px;
+}
+.result-icon {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 20px; margin-bottom: 10px; flex-shrink: 0;
+}
+.result-row { display: flex; align-items: flex-start; gap: 14px }
+.result-ok-ic { background: var(--ok-bg); color: var(--ok) }
+.result-bad-ic { background: var(--bad-bg); color: var(--bad) }
+.result-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px }
+.ri-cell-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3) }
+.ri-cell-val { font-size: 13px; font-weight: 600; margin-top: 2px }
+
+/* Right panel */
+.right-panel { display: flex; flex-direction: column; gap: 14px }
+.manual-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px }
+.mc-title { font-family: var(--fd); font-size: 13px; font-weight: 700; margin-bottom: 12px }
+.recent-scan { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center }
+.recent-scan:last-child { border-bottom: none }
+.rs-time { font-size: 11px; color: var(--fg-3); white-space: nowrap }
+.rs-name { font-size: 13px; font-weight: 600 }
+.rs-plan { font-size: 11px; color: var(--fg-3) }
+
+@media (max-width: 900px) {
+  .scan-layout { grid-template-columns: 1fr }
+  .viewfinder { aspect-ratio: 1 / 1 }
+}
+</style>
+</head>
+<body>
+<div id="sb-ov" class="sb-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar-root"></aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn menu-btn" id="menu-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="tb-page">Scan QR — Contrôle d'accès</span>
+      <div class="tb-actions">
+        <button class="btn btn-outline btn-sm" onclick="showState('idle')">Réinitialiser</button>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="pg-hd">
+        <div>
+          <div class="pg-title">Contrôle d'accès</div>
+          <div class="pg-sub">Scannez le QR code d'un abonné pour valider son entrée</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="showState('success')">✅ Simuler accès OK</button>
+          <button class="btn btn-outline btn-sm" onclick="showState('denied')">❌ Simuler refus</button>
+        </div>
+      </div>
+
+      <div class="scan-layout">
+        <!-- Camera + Result -->
+        <div class="viewfinder-card">
+          <div class="vf-bar">
+            <span class="vf-title">Caméra — Scan QR</span>
+            <span class="live-dot">En direct</span>
+          </div>
+          <div class="viewfinder">
+            <div class="vf-overlay"></div>
+            <div class="scan-box">
+              <div class="sc-tl"></div>
+              <div class="sc-tr"></div>
+              <div class="sc-bl"></div>
+              <div class="sc-br"></div>
+              <div class="scan-line"></div>
+            </div>
+            <div class="vf-hint">Placez le QR code dans le cadre</div>
+          </div>
+
+          <!-- Result states -->
+          <div class="result-panel">
+            <!-- IDLE -->
+            <div id="state-idle" class="result-idle">
+              <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 8px;opacity:.4"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="4"/><rect x="13" y="7" width="4" height="4"/><rect x="7" y="13" width="4" height="4"/></svg>
+              <p>En attente d'un QR code…</p>
+              <p style="margin-top:4px;font-size:11px">Pointez la caméra vers le QR code de l'abonné</p>
+            </div>
+
+            <!-- SUCCESS -->
+            <div id="state-success" class="result-success" hidden>
+              <div class="result-row">
+                <div class="result-icon result-ok-ic">
+                  <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <div style="font-family:var(--fd);font-size:16px;font-weight:800;color:var(--ok)">Accès autorisé</div>
+                  <div style="font-size:13px;color:var(--fg-2);margin-top:2px">Entrée enregistrée à 09:14</div>
+                </div>
+              </div>
+              <div class="result-info-grid">
+                <div>
+                  <div class="ri-cell-label">Abonné</div>
+                  <div class="ri-cell-val">Kouassi Aya</div>
+                </div>
+                <div>
+                  <div class="ri-cell-label">N° membre</div>
+                  <div class="ri-cell-val">#M-1042</div>
+                </div>
+                <div>
+                  <div class="ri-cell-label">Plan</div>
+                  <div class="ri-cell-val">Mensuel Standard</div>
+                </div>
+                <div>
+                  <div class="ri-cell-label">Expire dans</div>
+                  <div class="ri-cell-val" style="color:var(--warn)">2 jours</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DENIED -->
+            <div id="state-denied" class="result-denied" hidden>
+              <div class="result-row">
+                <div class="result-icon result-bad-ic">
+                  <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+                <div>
+                  <div style="font-family:var(--fd);font-size:16px;font-weight:800;color:var(--bad)">Accès refusé</div>
+                  <div style="font-size:13px;color:var(--fg-2);margin-top:2px">Abonnement expiré depuis 11 jours</div>
+                </div>
+              </div>
+              <div class="result-info-grid">
+                <div>
+                  <div class="ri-cell-label">Abonné</div>
+                  <div class="ri-cell-val">Coulibaly Jean</div>
+                </div>
+                <div>
+                  <div class="ri-cell-label">N° membre</div>
+                  <div class="ri-cell-val">#M-0812</div>
+                </div>
+                <div>
+                  <div class="ri-cell-label">Dernier plan</div>
+                  <div class="ri-cell-val">Mensuel Premium</div>
+                </div>
+                <div>
+                  <div class="ri-cell-label">Expiré le</div>
+                  <div class="ri-cell-val" style="color:var(--bad)">18 oct. 2026</div>
+                </div>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <a href="member-detail.html" class="btn btn-primary btn-sm">Renouveler l'abonnement</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right panel -->
+        <div class="right-panel">
+          <!-- Manual entry -->
+          <div class="manual-card">
+            <div class="mc-title">Saisie manuelle du code</div>
+            <div class="fgrp">
+              <label class="lbl">Code QR ou N° de membre</label>
+              <input class="inp" type="text" placeholder="AG-M1042-KA ou #M-1042">
+            </div>
+            <button class="btn btn-outline" style="width:100%" onclick="showState('success')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Vérifier l'accès
+            </button>
+          </div>
+
+          <!-- Stats today -->
+          <div class="manual-card">
+            <div class="mc-title">Aujourd'hui</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div style="text-align:center;padding:10px;background:var(--ok-bg);border-radius:var(--r)">
+                <div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--ok)">23</div>
+                <div style="font-size:11px;color:var(--ok);margin-top:2px">Entrées</div>
+              </div>
+              <div style="text-align:center;padding:10px;background:var(--bad-bg);border-radius:var(--r)">
+                <div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--bad)">2</div>
+                <div style="font-size:11px;color:var(--bad);margin-top:2px">Refus</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent scans -->
+          <div class="manual-card">
+            <div class="mc-title">Derniers passages</div>
+            <div class="recent-scan">
+              <span class="badge b-ok" style="flex-shrink:0">✓</span>
+              <div style="flex:1;min-width:0">
+                <div class="rs-name">Kouassi Aya</div>
+                <div class="rs-plan">Mensuel Standard · J+2</div>
+              </div>
+              <div class="rs-time">09:14</div>
+            </div>
+            <div class="recent-scan">
+              <span class="badge b-ok" style="flex-shrink:0">✓</span>
+              <div style="flex:1;min-width:0">
+                <div class="rs-name">Traoré Aminata</div>
+                <div class="rs-plan">Mensuel Premium · J+6</div>
+              </div>
+              <div class="rs-time">08:55</div>
+            </div>
+            <div class="recent-scan">
+              <span class="badge b-bad" style="flex-shrink:0">✗</span>
+              <div style="flex:1;min-width:0">
+                <div class="rs-name">Coulibaly Jean</div>
+                <div class="rs-plan">Expiré · 18 oct.</div>
+              </div>
+              <div class="rs-time">08:40</div>
+            </div>
+            <div class="recent-scan">
+              <span class="badge b-ok" style="flex-shrink:0">✓</span>
+              <div style="flex:1;min-width:0">
+                <div class="rs-name">Bamba Seydou</div>
+                <div class="rs-plan">Pack · 7/10 restants</div>
+              </div>
+              <div class="rs-time">08:22</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="sidebar.js"></script>
+<script>
+function showState(s) {
+  ['idle','success','denied'].forEach(k => {
+    document.getElementById('state-' + k).hidden = k !== s;
+  });
+}
+</script>
+</body>

@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Inscrire ma salle — AbidjanGym</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap">
+<style>
+:root {
+  --bg: #F5F7FB;
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+  --fg: #0F172A;
+  --fg-2: #475569;
+  --fg-3: #94A3B8;
+  --accent: #FF5A1E;
+  --accent-h: #E84A10;
+  --accent-soft: rgba(255,90,30,.1);
+  --ok: #16A34A;
+  --ok-bg: rgba(22,163,74,.1);
+  --bad: #DC2626;
+  --fd: 'Plus Jakarta Sans', sans-serif;
+  --fb: 'DM Sans', sans-serif;
+  --r: 10px;
+  --r-lg: 16px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #080E1A; --surface: #0F1B2D; --border: #1E2D42;
+    --fg: #F0F4FF; --fg-2: #94A3B8; --fg-3: #4A6080;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #080E1A; --surface: #0F1B2D; --border: #1E2D42;
+  --fg: #F0F4FF; --fg-2: #94A3B8; --fg-3: #4A6080;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+body {
+  font-family: var(--fb); background: var(--bg); color: var(--fg);
+  min-height: 100vh; display: flex; flex-direction: column;
+  padding-left: max(0px, env(safe-area-inset-left,0px));
+  padding-right: max(0px, env(safe-area-inset-right,0px));
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────── */
+.ob-layout { display: flex; flex: 1; min-height: 100vh }
+.ob-left {
+  width: 420px; flex-shrink: 0;
+  background: #0C1A2C url('../photos/u9482158516_Young_Black_African_woman_gym_receptionist_scanni_f1db445f-87a5-4026-9868-f82d4b784a8b_0.png') center/cover no-repeat;
+  padding: 40px 36px; display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow: hidden;
+}
+.ob-left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(12,26,44,.90) 0%, rgba(12,26,44,.70) 55%, rgba(12,26,44,.88) 100%);
+}
+.ob-left > * { position: relative; z-index: 1; }
+.ob-right {
+  flex: 1; padding: 40px max(40px, env(safe-area-inset-right,0px)) 60px 48px;
+  overflow-y: auto;
+}
+
+/* ── LEFT PANEL ──────────────────────────────────────────────────── */
+.brand-mark {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 48px; text-decoration: none;
+}
+.logo-icon {
+  width: 38px; height: 38px; background: var(--accent);
+  border-radius: 10px; display: grid; place-items: center;
+}
+.logo-name { font-family: var(--fd); font-size: 18px; font-weight: 800; color: white }
+.logo-name span { color: var(--accent) }
+.ob-headline {
+  font-family: var(--fd); font-size: 28px; font-weight: 900;
+  color: white; line-height: 1.2; letter-spacing: -.02em; text-wrap: balance;
+  margin-bottom: 16px;
+}
+.ob-sub { font-size: 14px; color: #8A9BB8; line-height: 1.6; margin-bottom: 40px }
+.perk-list { display: flex; flex-direction: column; gap: 14px }
+.perk {
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.perk-ic {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  display: grid; place-items: center;
+}
+.perk-text strong { display: block; font-family: var(--fd); font-size: 13px; font-weight: 700; color: white; margin-bottom: 2px }
+.perk-text span { font-size: 12px; color: #8A9BB8 }
+.ob-bottom {
+  margin-top: auto; padding-top: 32px;
+  font-size: 12px; color: #4A6080; display: flex; align-items: center; gap: 6px;
+}
+
+/* ── STEPS ───────────────────────────────────────────────────────── */
+.steps {
+  display: flex; gap: 0; margin-bottom: 40px; align-items: center;
+}
+.step-item {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+}
+.step-item:last-child { flex: none }
+.step-dot {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center;
+  font-family: var(--fd); font-size: 12px; font-weight: 800;
+  transition: all .2s;
+}
+.step-dot.done { background: var(--ok-bg); color: var(--ok) }
+.step-dot.active { background: var(--accent); color: white }
+.step-dot.pending { background: var(--border); color: var(--fg-3) }
+.step-label {
+  font-family: var(--fd); font-size: 12px; font-weight: 600;
+  white-space: nowrap;
+}
+.step-label.active { color: var(--fg) }
+.step-label.done { color: var(--ok) }
+.step-label.pending { color: var(--fg-3) }
+.step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; transition: background .3s }
+.step-line.done { background: var(--ok) }
+
+/* ── FORM ────────────────────────────────────────────────────────── */
+.form-section { max-width: 560px }
+.form-title {
+  font-family: var(--fd); font-size: 22px; font-weight: 800;
+  margin-bottom: 4px; letter-spacing: -.01em;
+}
+.form-subtitle { font-size: 14px; color: var(--fg-2); margin-bottom: 32px }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px }
+.field label {
+  font-family: var(--fd); font-size: 13px; font-weight: 600; color: var(--fg-2);
+}
+.field label span { color: var(--bad) }
+.inp {
+  padding: 11px 14px; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 10px; font-family: var(--fb); font-size: 14px; color: var(--fg);
+  transition: border-color .15s; outline: none; width: 100%;
+}
+.inp:focus { border-color: var(--accent) }
+.inp::placeholder { color: var(--fg-3) }
+select.inp { cursor: pointer }
+.inp-prefix-wrap {
+  position: relative;
+}
+.inp-prefix {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; color: var(--fg-3); pointer-events: none;
+}
+.inp-prefix-wrap .inp { padding-left: 68px }
+.field-hint { font-size: 11px; color: var(--fg-3); margin-top: 4px }
+
+/* ── PLAN SELECTOR ───────────────────────────────────────────────── */
+.plan-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px }
+.plan-opt {
+  border: 2px solid var(--border); border-radius: 14px;
+  padding: 16px; cursor: pointer; transition: all .15s; position: relative;
+  background: var(--surface);
+}
+.plan-opt:hover { border-color: var(--accent) }
+.plan-opt.selected { border-color: var(--accent); background: var(--accent-soft) }
+.plan-opt-radio { display: none }
+.plan-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border);
+  background: var(--surface); display: grid; place-items: center; transition: all .15s;
+}
+.plan-opt.selected .plan-check { background: var(--accent); border-color: var(--accent) }
+.plan-opt-name { font-family: var(--fd); font-size: 13px; font-weight: 700; margin-bottom: 4px }
+.plan-opt-price { font-family: var(--fd); font-size: 18px; font-weight: 900; color: var(--accent) }
+.plan-opt-price sub { font-size: 10px; font-weight: 600 }
+.plan-opt.selected .plan-opt-price { color: var(--accent) }
+.plan-opt-features { font-size: 11px; color: var(--fg-3); margin-top: 6px; line-height: 1.4 }
+
+/* ── BUTTONS ─────────────────────────────────────────────────────── */
+.form-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);
+}
+.btn-back {
+  padding: 11px 22px; border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: var(--fd); font-size: 14px; font-weight: 600;
+  color: var(--fg-2); background: transparent; cursor: pointer;
+  text-decoration: none; transition: border-color .15s;
+}
+.btn-back:hover { border-color: var(--fg-3) }
+.btn-next {
+  padding: 12px 28px; border: none; border-radius: 10px;
+  font-family: var(--fd); font-size: 15px; font-weight: 800;
+  background: var(--accent); color: white; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background .15s; box-shadow: 0 4px 16px rgba(255,90,30,.3);
+}
+.btn-next:hover { background: var(--accent-h) }
+
+/* ── STEP PANELS ─────────────────────────────────────────────────── */
+.step-panel { display: none }
+.step-panel.active { display: block }
+
+/* ── SUCCESS ─────────────────────────────────────────────────────── */
+.success-wrap {
+  display: none; text-align: center; padding: 40px 0;
+}
+.success-wrap.active { display: block }
+.success-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--ok-bg); display: grid; place-items: center;
+  margin: 0 auto 20px; color: var(--ok);
+}
+.success-title {
+  font-family: var(--fd); font-size: 26px; font-weight: 900;
+  margin-bottom: 10px;
+}
+.success-sub { font-size: 15px; color: var(--fg-2); max-width: 380px; margin: 0 auto 32px }
+.success-info {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 24px; text-align: left;
+  max-width: 400px; margin: 0 auto 24px;
+}
+.si-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.si-row:last-child { border-bottom: none }
+.si-label { color: var(--fg-3) }
+.si-value { font-weight: 600 }
+
+@media (max-width: 900px) {
+  .ob-left { display: none }
+  .ob-right { padding: 32px max(20px, env(safe-area-inset-right,0px)) 60px 20px }
+  .field-row { grid-template-columns: 1fr }
+  .plan-cards { grid-template-columns: 1fr }
+}
+@media (max-width: 480px) {
+  .steps { gap: 2px }
+  .step-label { display: none }
+  .step-line { display: none }
+}
+</style>
+</head>
+<body>
+
+<div class="ob-layout">
+  <!-- LEFT PANEL -->
+  <aside class="ob-left">
+    <a href="landing.html" class="brand-mark">
+      <div class="logo-icon">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 8h2M16 8h2M6 16h2M16 16h2M8 8h8M8 16h8"/></svg>
+      </div>
+      <span class="logo-name">Abidjan<span>Gym</span></span>
+    </a>
+    <h2 class="ob-headline">Votre salle en ligne en 5 minutes</h2>
+    <p class="ob-sub">Commencez avec 2 mois gratuits, sans carte bancaire. Vous pouvez payer via Orange Money, MTN MoMo ou Wave.</p>
+    <div class="perk-list">
+      <div class="perk">
+        <div class="perk-ic" style="background:rgba(255,90,30,.15)">
+          <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="perk-text">
+          <strong>2 mois d'essai gratuit</strong>
+          <span>Sans engagement, sans carte bancaire requise</span>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-ic" style="background:rgba(22,163,74,.15)">
+          <svg width="16" height="16" fill="none" stroke="#16A34A" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div class="perk-text">
+          <strong>QR Code activé immédiatement</strong>
+          <span>Vos membres peuvent scanner dès aujourd'hui</span>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-ic" style="background:rgba(99,102,241,.15)">
+          <svg width="16" height="16" fill="none" stroke="#6366F1" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="perk-text">
+          <strong>Notifications WhatsApp incluses</strong>
+          <span>Rappels automatiques pour vos abonnés</span>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-ic" style="background:rgba(251,191,36,.15)">
+          <svg width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="perk-text">
+          <strong>Données sécurisées</strong>
+          <span>Hébergées en Côte d'Ivoire</span>
+        </div>
+      </div>
+    </div>
+    <div class="ob-bottom">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Connexion sécurisée · vos données restent privées
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="ob-right">
+    <!-- Stepper -->
+    <div class="steps">
+      <div class="step-item">
+        <div class="step-dot active" id="dot-1">1</div>
+        <div class="step-label active" id="lbl-1">Votre salle</div>
+      </div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step-item">
+        <div class="step-dot pending" id="dot-2">2</div>
+        <div class="step-label pending" id="lbl-2">Compte admin</div>
+      </div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step-item">
+        <div class="step-dot pending" id="dot-3">3</div>
+        <div class="step-label pending" id="lbl-3">Formule</div>
+      </div>
+      <div class="step-line" id="line-3"></div>
+      <div class="step-item">
+        <div class="step-dot pending" id="dot-4">4</div>
+        <div class="step-label pending" id="lbl-4">Confirmation</div>
+      </div>
+    </div>
+
+    <!-- STEP 1 — Infos salle -->
+    <div class="step-panel active form-section" id="panel-1">
+      <div class="form-title">Votre salle de sport</div>
+      <div class="form-subtitle">Ces informations seront visibles par vos abonnés.</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Nom de la salle <span>*</span></label>
+          <input class="inp" type="text" placeholder="ex: FitZone Abidjan" id="salle-nom">
+        </div>
+        <div class="field">
+          <label>Quartier / Commune <span>*</span></label>
+          <select class="inp" id="salle-quartier">
+            <option value="">Sélectionner...</option>
+            <option>Cocody</option>
+            <option>Marcory</option>
+            <option>Yopougon</option>
+            <option>Adjamé</option>
+            <option>Plateau</option>
+            <option>Treichville</option>
+            <option>Abobo</option>
+            <option>Koumassi</option>
+            <option>Port-Bouët</option>
+            <option>Bingerville</option>
+            <option>Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Adresse complète <span>*</span></label>
+        <input class="inp" type="text" placeholder="ex: Rue des Jardins, face Total, Cocody">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Téléphone principal <span>*</span></label>
+          <div class="inp-prefix-wrap">
+            <span class="inp-prefix">🇨🇮 +225</span>
+            <input class="inp" type="tel" placeholder="07 00 00 00 00" id="salle-tel">
+          </div>
+        </div>
+        <div class="field">
+          <label>WhatsApp (pour les notifs)</label>
+          <div class="inp-prefix-wrap">
+            <span class="inp-prefix">🇨🇮 +225</span>
+            <input class="inp" type="tel" placeholder="07 00 00 00 00">
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Site web ou page Facebook (optionnel)</label>
+        <input class="inp" type="url" placeholder="https://facebook.com/votre-salle">
+      </div>
+      <div class="form-footer">
+        <a href="landing.html" class="btn-back">← Retour</a>
+        <button class="btn-next" onclick="goStep(2)">
+          Continuer
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — Compte admin -->
+    <div class="step-panel form-section" id="panel-2">
+      <div class="form-title">Votre compte administrateur</div>
+      <div class="form-subtitle">Vous utiliserez ces identifiants pour vous connecter.</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Prénom <span>*</span></label>
+          <input class="inp" type="text" placeholder="Jean-Marc">
+        </div>
+        <div class="field">
+          <label>Nom <span>*</span></label>
+          <input class="inp" type="text" placeholder="Kouassi">
+        </div>
+      </div>
+      <div class="field">
+        <label>Adresse email <span>*</span></label>
+        <input class="inp" type="email" placeholder="jean@fitzoneabidjan.com">
+        <span class="field-hint">Vous recevrez votre lien de confirmation ici.</span>
+      </div>
+      <div class="field">
+        <label>Numéro Mobile Money (pour payer votre abonnement)</label>
+        <div class="inp-prefix-wrap">
+          <span class="inp-prefix">🇨🇮 +225</span>
+          <input class="inp" type="tel" placeholder="07 00 00 00 00">
+        </div>
+        <span class="field-hint">Orange Money, MTN MoMo ou Wave acceptés.</span>
+      </div>
+      <div class="field">
+        <label>Mot de passe <span>*</span></label>
+        <input class="inp" type="password" placeholder="Minimum 8 caractères">
+      </div>
+      <div class="field">
+        <label>Confirmer le mot de passe <span>*</span></label>
+        <input class="inp" type="password" placeholder="Répétez le mot de passe">
+      </div>
+      <div class="form-footer">
+        <button class="btn-back" onclick="goStep(1)">← Retour</button>
+        <button class="btn-next" onclick="goStep(3)">
+          Continuer
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 — Formule -->
+    <div class="step-panel form-section" id="panel-3">
+      <div class="form-title">Choisissez votre formule</div>
+      <div class="form-subtitle">2 mois gratuits sur toutes les formules. Pas de CB requise.</div>
+      <div class="plan-cards">
+        <label class="plan-opt" onclick="selectPlan(this)">
+          <input type="radio" name="plan" class="plan-opt-radio" value="starter">
+          <div class="plan-check"></div>
+          <div class="plan-opt-name">Starter</div>
+          <div class="plan-opt-price">0 <sub>FCFA/mois</sub></div>
+          <div class="plan-opt-features">50 abonnés max · QR code · Mobile Money</div>
+        </label>
+        <label class="plan-opt selected" onclick="selectPlan(this)">
+          <input type="radio" name="plan" class="plan-opt-radio" value="essentiel" checked>
+          <div class="plan-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="plan-opt-name">Essentiel ⭐</div>
+          <div class="plan-opt-price">15 000 <sub>FCFA/mois</sub></div>
+          <div class="plan-opt-features">Abonnés illimités · WhatsApp · Rapports</div>
+        </label>
+        <label class="plan-opt" onclick="selectPlan(this)">
+          <input type="radio" name="plan" class="plan-opt-radio" value="pro">
+          <div class="plan-check"></div>
+          <div class="plan-opt-name">Pro</div>
+          <div class="plan-opt-price">35 000 <sub>FCFA/mois</sub></div>
+          <div class="plan-opt-features">Multi-salles · API · Support prioritaire</div>
+        </label>
+      </div>
+      <div style="background:var(--ok-bg);border:1px solid rgba(22,163,74,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <svg width="16" height="16" fill="none" stroke="var(--ok)" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+        <div style="font-size:13px;color:var(--fg-2)"><strong style="color:var(--fg)">2 mois gratuits</strong> — vous ne serez débité qu'à la fin de la période d'essai. Vous pouvez annuler à tout moment depuis votre espace.</div>
+      </div>
+      <div class="form-footer">
+        <button class="btn-back" onclick="goStep(2)">← Retour</button>
+        <button class="btn-next" onclick="goStep(4)">
+          Valider et créer mon espace
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4 — Confirmation -->
+    <div class="step-panel form-section" id="panel-4">
+      <div class="form-title">Tout est prêt !</div>
+      <div class="form-subtitle">Vérifiez les informations avant de finaliser.</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:24px">
+        <div style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">Récapitulatif</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            <span style="color:var(--fg-3)">Salle</span>
+            <span style="font-weight:600" id="recap-salle">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            <span style="color:var(--fg-3)">Commune</span>
+            <span style="font-weight:600" id="recap-quartier">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            <span style="color:var(--fg-3)">Formule</span>
+            <span style="font-weight:600;color:var(--accent)" id="recap-plan">Essentiel — 15 000 FCFA/mois</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:var(--fg-3)">Essai gratuit</span>
+            <span style="font-weight:600;color:var(--ok)">2 mois · aucun débit immédiat</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:28px">
+        <input type="checkbox" id="cgu" style="width:16px;height:16px;margin-top:2px;accent-color:var(--accent)">
+        <label for="cgu" style="font-size:13px;color:var(--fg-2);cursor:pointer">
+          J'accepte les <a href="#" style="color:var(--accent)">conditions générales d'utilisation</a> et la <a href="#" style="color:var(--accent)">politique de confidentialité</a> d'AbidjanGym.
+        </label>
+      </div>
+      <div class="form-footer">
+        <button class="btn-back" onclick="goStep(3)">← Retour</button>
+        <button class="btn-next" onclick="showSuccess()" style="background:var(--ok);box-shadow:0 4px 16px rgba(22,163,74,.3)">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Créer mon espace gratuitement
+        </button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-wrap form-section" id="success">
+      <div class="success-icon">
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-title">Bienvenue sur AbidjanGym ! 🎉</div>
+      <p class="success-sub">Votre espace est créé. Un email de confirmation a été envoyé. Vous pouvez accéder à votre tableau de bord maintenant.</p>
+      <div class="success-info">
+        <div class="si-row">
+          <span class="si-label">URL de votre espace</span>
+          <span class="si-value" style="color:var(--accent);font-family:monospace;font-size:12px">app.abidjangym.com/<span id="success-slug">fitzone</span></span>
+        </div>
+        <div class="si-row">
+          <span class="si-label">Formule</span>
+          <span class="si-value" id="success-plan">Essentiel</span>
+        </div>
+        <div class="si-row">
+          <span class="si-label">Essai gratuit jusqu'au</span>
+          <span class="si-value" id="success-date"></span>
+        </div>
+      </div>
+      <a href="dashboard.html" class="btn-next" style="display:inline-flex;text-decoration:none">
+        Accéder à mon tableau de bord
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </main>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+function goStep(n) {
+  document.getElementById('panel-' + currentStep).classList.remove('active');
+  const dots = ['dot-1','dot-2','dot-3','dot-4'];
+  const lbls = ['lbl-1','lbl-2','lbl-3','lbl-4'];
+  const lines = ['line-1','line-2','line-3'];
+
+  // Update stepper
+  for (let i = 1; i <= totalSteps; i++) {
+    const dot = document.getElementById('dot-' + i);
+    const lbl = document.getElementById('lbl-' + i);
+    dot.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
+    lbl.className = 'step-label ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
+    if (i < n) dot.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    else dot.textContent = i;
+    if (i <= 3) {
+      document.getElementById('line-' + i).className = 'step-line' + (i < n ? ' done' : '');
+    }
+  }
+
+  // Fill recap on step 4
+  if (n === 4) {
+    const nom = document.getElementById('salle-nom').value || 'Votre salle';
+    const quartier = document.getElementById('salle-quartier').value || '—';
+    const sel = document.querySelector('.plan-opt.selected');
+    const planName = sel ? sel.querySelector('.plan-opt-name').textContent.replace(' ⭐','') : 'Essentiel';
+    const planPrice = sel ? sel.querySelector('.plan-opt-price').textContent.trim() : '15 000 FCFA/mois';
+    document.getElementById('recap-salle').textContent = nom;
+    document.getElementById('recap-quartier').textContent = quartier;
+    document.getElementById('recap-plan').textContent = planName + ' — ' + planPrice;
+  }
+
+  currentStep = n;
+  document.getElementById('panel-' + n).classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function selectPlan(el) {
+  document.querySelectorAll('.plan-opt').forEach(p => {
+    p.classList.remove('selected');
+    p.querySelector('.plan-check').innerHTML = '';
+  });
+  el.classList.add('selected');
+  el.querySelector('.plan-check').innerHTML = '<svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+}
+
+function showSuccess() {
+  document.getElementById('panel-4').classList.remove('active');
+  const nom = document.getElementById('salle-nom').value || 'votre-salle';
+  const slug = nom.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').substring(0, 20) || 'ma-salle';
+  const sel = document.querySelector('.plan-opt.selected');
+  const planName = sel ? sel.querySelector('.plan-opt-name').textContent.replace(' ⭐','') : 'Essentiel';
+  const d = new Date(); d.setMonth(d.getMonth() + 2);
+  const opts = {day: 'numeric', month: 'long', year: 'numeric'};
+  document.getElementById('success-slug').textContent = slug;
+  document.getElementById('success-plan').textContent = planName;
+  document.getElementById('success-date').textContent = d.toLocaleDateString('fr-FR', opts);
+  document.getElementById('success').classList.add('active');
+  // Update stepper to all done
+  for (let i = 1; i <= totalSteps; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.className = 'step-dot done';
+    dot.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    document.getElementById('lbl-' + i).className = 'step-label done';
+    if (i <= 3) document.getElementById('line-' + i).className = 'step-line done';
+  }
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+</body>
+</html>
