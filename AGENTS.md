@@ -73,7 +73,7 @@ Aucune.
 2. **Aucune donnée réelle.** Noms, téléphones et emails de test doivent être fictifs (ex. `+225 07 00 00 00 01`, `test@example.com`).
 3. **Aucun fait inventé.** S'il te manque une information (identifiant d'API, URL, numéro, choix fonctionnel non tranché par le CDC), écris `[À FOURNIR]` à l'endroit concerné et liste-la dans ta PR. N'invente jamais de valeur plausible.
 4. **Tu ne sors pas de ton périmètre**, même pour « juste corriger un détail » ailleurs : signale-le dans ta PR.
-5. **Hébergement Hostinger mutualisé** (CDC §3) : PHP 8.2+, MySQL 8, Apache avec `.htaccess`. **Pas** de processus Node persistant, **pas** de Redis, **pas** de Docker, **pas** de worker de file d'attente (les tâches asynchrones passent par des cron jobs). Node sert seulement à construire le front.
+5. **Hébergement Hostinger mutualisé** (CDC §3) : PHP 8.3+, MySQL 8, Apache avec `.htaccess`. **Pas** de processus Node persistant, **pas** de Redis, **pas** de Docker, **pas** de worker de file d'attente (les tâches asynchrones passent par des cron jobs). Node sert seulement à construire le front.
 6. **Le contrat d'API `docs/api/openapi.yaml` fait foi** entre le front et le back. Une fois figé (v1.0.0), toute modification passe par une PR étiquetée `contrat-api`.
 7. **Langue :** français pour la documentation, les messages de commit, les PR et toutes les interfaces. L'anglais est toléré dans le code (noms de variables, commentaires techniques).
 8. **Pas de push direct sur `develop` ni sur `main`.** Tout passe par une PR.

@@ -4,7 +4,7 @@
 **Client :** Rufin Ismael Baroan — Le Labo de Zézé  
 **Domaine :** https://abidjangym.com/  
 **Date :** Octobre 2026  
-**Version :** 2.2  
+**Version :** 2.3  
 **Statut :** Document de référence — toutes les entités doivent s'y conformer
 
 ---
@@ -166,7 +166,7 @@ Le projet est hébergé sur un **espace web Hostinger** (hébergement mutualisé
 |---|---|
 | Type | Hébergement mutualisé (shared hosting) |
 | Panneau de contrôle | hPanel (Hostinger) |
-| Langages supportés | PHP 8.x (8.1, 8.2, 8.3) |
+| Langages supportés | PHP 8.x (8.1, 8.2, 8.3). **Version retenue : PHP 8.3** (exigée par Laravel 13, v2.3) |
 | Base de données | MySQL 8.x / MariaDB |
 | Serveur web | Apache (avec support .htaccess) |
 | SSL | Let's Encrypt (fourni par Hostinger, renouvellement automatique) |
@@ -743,7 +743,7 @@ Exception sur `/scan` : autoriser l'accès à la caméra dans Permissions-Policy
 ### 7.2 Entité B — Backend (stack recommandée)
 
 **Stack recommandée (compatible Hostinger PHP) :**
-- **Framework :** Laravel 11 (PHP 8.2+)
+- **Framework :** Laravel 13, version ≥ 13.30 (PHP 8.3+). *Laravel 11, prévu en v2.0, est en fin de maintenance : voir changelog v2.3*
 - **Base de données :** MySQL 8.x (Hostinger)
 - **ORM :** Eloquent (inclus dans Laravel)
 - **Authentification :** Laravel Sanctum (tokens JWT httpOnly)
@@ -962,3 +962,4 @@ Admin → Fiche abonné → "Enregistrer un paiement" → Mode : Orange Money
 | 2.0 | Oct. 2026 | Le Labo de Zézé | Ajout : organisation multi-entités, hébergement Hostinger, SEO, Sécurité, Agent Blog, stack technique par entité |
 | 2.1 | 30 oct. 2026 | Benjamin (Entité C), validé par Rufin I. Baroan | §7.3 : organisation GitHub corrigée (`Labozeze` au lieu de `lelabodeze`). L'organisation des entités et le mode de déploiement sont détaillés dans `docs/gouvernance/plan-de-collaboration.md` v1.0 |
 | 2.2 | 1er nov. 2026 | Benjamin (Entité C), décision de Rufin I. Baroan | §4.2.6 : activation on/off de chaque moyen de paiement par le gérant, seuls les moyens activés sont proposés (décision prise lors de la relecture de la FAQ, PR #22, ticket #23) |
+| 2.3 | 1er nov. 2026 | Benjamin (Entité C), décision de Rufin I. Baroan | §3.1 et §7.2 : **Laravel 13 (≥ 13.30) et PHP 8.3** au lieu de Laravel 11 / PHP 8.2. Laravel 11 n'est plus maintenu et `composer audit` y relève 5 failles, dont une critique (CVE-2026-114509), sans correctif dans cette branche (signalé par DeepSeek, PR #28, confirmé par Eric, ticket #30) |
