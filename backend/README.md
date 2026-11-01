@@ -104,7 +104,8 @@ Le trait apporte :
    la mise à jour lève `TenantMismatchException`. Un `$model->update($request->validated())`
    mal filtré ne peut donc pas déplacer une ligne d'une salle vers une autre (CDC §6.3).
 
-**Poser le contexte** (le middleware d'authentification le fera au ticket suivant) :
+**Poser le contexte** — le middleware `tenant` le fait pour une requête authentifiée ; sinon,
+explicitement :
 
 ```php
 use App\Support\Tenancy\TenantContext;
@@ -126,10 +127,45 @@ Member::withoutTenantScope()->count();   // toutes les salles
 Member::query()->forTenant($gymId);      // une salle précise, sans changer de contexte
 ```
 
-`ExampleRecord` (`app/Models/ExampleRecord.php`, table `example_records`) est un **modèle
-d'exemple** qui matérialise ce socle et sert aux tests d'isolation. Il ne représente aucune
-entité métier et sera supprimé dès l'arrivée du premier vrai modèle multi-tenant
-(`Gym`, `Member`, `Subscription`, `Payment`).
+**Modèles livrés (ticket #39)**
+
+| Modèle | Table | Rôle |
+|---|---|---|
+| `Gym` | `gyms` | la salle, c'est-à-dire **le tenant** : ses `id` servent de `tenant_id` partout ailleurs |
+| `GymBanner` | `gym_banners` | bannières de la salle, trois maximum (CDC §4.2.3) |
+| `User` | `users` | gérant (`admin`) ou caissier (`cashier`), avec `is_active` (CDC §4.2.10) |
+| `PaymentMethodSetting` | `payment_method_settings` | les sept moyens de paiement, leur activation on/off et leurs identifiants **chiffrés** (CDC §4.2.6, §6.6) |
+
+`Gym` n'utilise pas `BelongsToTenant` : c'est le tenant lui-même, il n'a pas de `tenant_id`.
+
+**Chiffrement des identifiants de prestataires.** `PaymentMethodSetting::$credentials` cumule deux
+protections : le cast `encrypted:array` (chiffrement AES-256 avec `APP_KEY` avant écriture) et
+`$hidden`, qui exclut le champ de `toArray()`, `toJson()` et donc de toute réponse d'API. Un test
+vérifie la valeur brute en base *et* la sérialisation.
+
+**Connexion et contexte.** Le même email peut exister dans deux salles : la connexion devra donc
+chercher le compte **hors** du scope, puis poser le contexte, jamais l'inverse.
+
+```php
+$user = User::withoutTenantScope()->where('email', $email)->first();
+// … vérification du mot de passe, puis :
+app(TenantContext::class)->set($user->tenant_id);
+```
+
+**Middleware prêt pour l'authentification.** L'alias `tenant` (`ResolveTenantContext`) déduit la
+salle de l'utilisateur authentifié et vide le contexte en sortie de requête. À appliquer après le
+middleware d'authentification :
+
+```php
+Route::middleware(['auth:sanctum', 'tenant'])->group(function (): void {
+    // routes métier
+});
+```
+
+**Données de démonstration.** `php artisan db:seed` crée deux salles fictives — « FitZone Test »
+et « Salle Témoin » — avec un gérant et un caissier chacune, et les sept moyens de paiement
+(espèces seules activées). Aucune donnée réelle : emails en `@example.com`, téléphones en
+`+225 07 00 00 00 XX` (docs/rapports/strategie-de-tests.md §5).
 
 ## 6. Configuration
 
