@@ -25,10 +25,9 @@ frontend/.data/
 # --- Backend (Laravel) ---
 backend/vendor/
 backend/storage/*.key
-backend/storage/logs/
-backend/storage/framework/cache/
-backend/storage/framework/sessions/
-backend/storage/framework/views/
+# Le contenu de storage/ est ignoré par les .gitignore propres à Laravel
+# (storage/logs/.gitignore, storage/framework/*/.gitignore…). Ne pas ignorer
+# les dossiers entiers ici : ils doivent exister après un clone (CI, Hostinger).
 backend/bootstrap/cache/*.php
 backend/public/storage
 backend/.phpunit.result.cache
