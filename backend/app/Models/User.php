@@ -42,11 +42,11 @@ use Laravel\Sanctum\HasApiTokens;
 final class User extends Authenticatable
 {
     use BelongsToTenant;
-
     use HasApiTokens;
 
     /** @use HasFactory<UserFactory> */
     use HasFactory;
+
     use Notifiable;
 
     /**
