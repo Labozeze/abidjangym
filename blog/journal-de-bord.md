@@ -68,3 +68,12 @@
 
 ### Bilan du sprint 0
 - **Terminé avec 4 jours d'avance** : 16 tickets, 15 PR, les 2 points de contrôle validés. Rapport : `docs/rapports/sprint-00.md`. *(Source : rapport du sprint 0)*
+
+---
+
+## Publications
+
+### Épisode 1 — « Les fondations » (publié le 01/11/2026)
+- **Article publié par Rufin** sur le blog du Labo de Zézé : https://lelabodezeze.com/blog/construire-saas-agents-ia-episode-1/ *(Source : message de Rufin, 01/11)*
+- Rédigé par César à partir de ce journal et du rapport du sprint 0. Rufin a fourni sa motivation (les expériences du Labo de Zézé sur l'IA) et a choisi de gérer lui-même l'appel à l'action et la catégorie sur son site. Le slug publié diffère de celui proposé. Sources de l'article : `blog/articles/episode-1-fondations/`. *(Source : échanges du 01/11)*
+- **Point notable pour la suite :** l'article a été publié pendant le projet, comme le premier épisode d'une série, et non à la fin comme le prévoyait le CDC §9. *(Source : décision de Rufin, 01/11)*

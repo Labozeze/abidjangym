@@ -1,0 +1,94 @@
+<!-- Titre de l'article (à mettre dans le champ Titre de WordPress) : Trois IA, un seul projet : comment je fais construire mon SaaS par une équipe d'agents (épisode 1) -->
+<!-- Coller ce contenu dans l'éditeur WordPress : bloc « HTML personnalisé » ou éditeur de code. -->
+
+<p><em>Temps de lecture : environ 8 minutes</em></p>
+<p>On entend souvent qu'il suffit aujourd'hui de demander à une IA « crée-moi une application » pour la voir apparaître. J'ai voulu vérifier ce que ça donne sur un vrai projet, avec de vrais clients au bout. Ma conclusion après la première semaine : l'IA écrit vite, très vite même, mais <strong>ce qui fait avancer le projet, c'est l'organisation autour d'elle</strong>. Et les décisions restent les miennes.</p>
+<p>Le projet s'appelle <strong>AbidjanGym</strong>. C'est un logiciel en ligne pour les gérants de salles de sport en Côte d'Ivoire : gestion des abonnés et des abonnements, paiements Mobile Money (Orange Money, MTN, Wave), contrôle d'accès par QR code à l'entrée, rappels par WhatsApp et SMS. Je n'en suis pas à la mise en ligne. Cet article raconte <strong>la première étape : poser les fondations</strong>.</p>
+<h2>Pourquoi une équipe d'agents plutôt qu'un seul assistant</h2>
+<p>J'aurais pu tout confier à une seule IA. J'ai fait un autre choix : <strong>répartir le travail entre trois IA de fournisseurs différents</strong>, comme on le ferait avec trois prestataires.</p>
+<ul>
+<li><strong>Codex</strong> (OpenAI) s'occupe de tout ce que voit le visiteur : la page d'accueil, l'inscription d'une salle, l'espace des abonnés.</li>
+<li><strong>DeepSeek</strong> s'occupe du « moteur » : les données, les paiements, la sécurité, les connexions.</li>
+<li><strong>Claude</strong> (Anthropic) joue le rôle de l'équipe de pilotage. Je lui ai demandé de se répartir en quatre agents, chacun avec un nom et une mission précise :</li>
+<li><strong>Benjamin</strong>, le chef de projet, découpe le travail en tâches et vérifie que tout respecte mon cahier des charges ;</li>
+<li><strong>Eric</strong> s'occupe de l'infrastructure : le dossier partagé du projet, les contrôles automatiques, la mise en ligne ;</li>
+<li><strong>Valère</strong> s'occupe des tests ;</li>
+<li><strong>César</strong> tient le journal du projet et rédige… cet article.</li>
+</ul>
+<p>Au départ, les tests étaient confiés à Eric. J'ai préféré un agent séparé pour cette mission, et Valère est né. Je ne le regrette pas : c'est lui qui a attrapé plusieurs erreurs, y compris une erreur d'Eric.</p>
+<p>Pourquoi trois fournisseurs ? Au <strong>Labo de Zézé</strong>, comme son nom l'indique, on fait des expériences : nous testons tout ce qui touche à l'intelligence artificielle. Faire collaborer trois fournisseurs différents sur un même projet fait partie de ces expériences. La question est simple : des IA concurrentes, qui ne se parlent pas, peuvent-elles construire ensemble un logiciel cohérent ?</p>
+<h2>Le principe : un seul lieu de travail, et c'est moi qui décide</h2>
+<p>Premier obstacle : ces trois IA <strong>ne peuvent pas se parler entre elles</strong>. Sans organisation, j'aurais passé mes journées à copier-coller des messages de l'une à l'autre.</p>
+<p>La solution proposée par Benjamin tient en une phrase : <strong>le dossier partagé du projet est la seule salle de réunion</strong>. Ce dossier est en ligne, sur GitHub. Tout ce qu'une IA doit savoir y est écrit, et tout ce qu'elle produit y revient.</p>
+<p>Concrètement, une tâche suit toujours le même chemin :</p>
+<ol>
+<li>Benjamin écrit un <strong>ticket</strong> : ce qu'il faut faire, pourquoi, et comment on saura que c'est réussi.</li>
+<li>J'ouvre l'outil de l'IA concernée et je lui écris une seule phrase, du type « traite le ticket n° 9 ».</li>
+<li>L'IA fait le travail et le dépose dans le dossier partagé. Une <strong>demande de validation</strong> s'ouvre automatiquement.</li>
+<li>Des contrôles automatiques vérifient le travail : pas de mot de passe oublié dans le code, pas de fichier modifié hors du domaine de l'IA, tests qui passent.</li>
+<li>Benjamin et Valère relisent et laissent leurs commentaires. Si quelque chose ne va pas, je relance l'IA avec « traite les commentaires ».</li>
+<li>Quand ils écrivent « prêt pour le merge », <strong>c'est moi qui valide</strong>.</li>
+</ol>
+<p>Un détail m'a frappé : Claude n'a même pas la possibilité de valider à ma place. Le garde-fou de son outil l'en empêche, et c'est très bien ainsi. <strong>Les agents proposent, je décide.</strong></p>
+<h2>Les points où j'ai décidé</h2>
+<p>Le cahier des charges prévoit des moments où rien n'avance sans moi. Cette semaine, j'en ai franchi deux.</p>
+<p><strong>Les maquettes.</strong> Codex a comparé les maquettes du site à mon cahier des charges et a relevé les écarts. J'ai pris plusieurs décisions, dont une qui me tient à cœur : <strong>aucun chiffre ni témoignage inventé sur le site</strong>. Les maquettes affichaient des statistiques et des avis de gérants qui n'existent pas encore. On les retire. Ils reviendront quand j'aurai de vrais clients.</p>
+<p><strong>Le contrat de l'application.</strong> C'est le document qui décrit précisément tout ce que l'application saura faire : 68 opérations, de la connexion d'un caissier au scan d'un QR code. Il permet à Codex et à DeepSeek de travailler en même temps sans s'attendre. DeepSeek a rédigé le contrat, et il m'a remonté sept questions plutôt que de trancher seul. Benjamin m'a présenté chacune avec une recommandation, en langage clair. J'ai validé.</p>
+<p>D'autres décisions sont arrivées en chemin, parfois de façon inattendue. En relisant la foire aux questions destinée à mes futurs clients, j'ai réalisé qu'un gérant doit pouvoir <strong>choisir les moyens de paiement qu'il accepte</strong>. Chaque moyen s'active ou se désactive en un clic, et par défaut seules les espèces sont activées. En relisant un simple texte, j'ai fait naître une nouvelle fonctionnalité. Elle a été ajoutée au cahier des charges et au contrat le jour même.</p>
+<p>J'ai aussi proposé une idée pour la mise en ligne : relier directement mon hébergement au dossier partagé. Eric l'a adaptée pour qu'aucun code non testé ne puisse arriver sur le serveur.</p>
+<h2>Ce qui a été refusé, et ce que ça m'a appris</h2>
+<p>C'est la partie qui m'a le plus appris. <strong>Sur dix livraisons de Codex et DeepSeek, quatre ont été renvoyées pour correction</strong> avant d'être acceptées.</p>
+<ul>
+<li><strong>L'analyse des maquettes</strong> me demandait de choisir la durée de l'essai gratuit. Or mon cahier des charges la fixait déjà : deux mois. Codex n'avait lu que les sections citées dans sa tâche. Benjamin l'a repéré, Codex a corrigé, et j'ai eu deux décisions inutiles en moins.</li>
+<li><strong>La foire aux questions</strong> était juste sur le fond, mais écrite pour l'équipe technique, avec des phrases comme « Le CDC prévoit… » que mes clients ne comprendraient jamais. Elle a été réécrite du point de vue du gérant.</li>
+<li><strong>Le contrat</strong> oubliait que le gérant doit pouvoir créer et désactiver ses caissiers, et laissait à tort un caissier modifier un paiement.</li>
+<li><strong>Le socle du « moteur »</strong> permettait, dans un cas précis, de déplacer une donnée d'une salle vers une autre. Pour un logiciel où chaque salle doit rester totalement isolée des autres, c'était inacceptable.</li>
+</ul>
+<p>Le cas le plus instructif concerne <strong>l'équipe de pilotage elle-même</strong>. En vérifiant le travail de DeepSeek, Valère a vu un test échouer. La cause ne venait pas de DeepSeek mais d'Eric : un fichier de configuration qu'il avait écrit au tout début empêchait certains dossiers indispensables d'être enregistrés. Sur le poste de DeepSeek, tout fonctionnait. Sur le serveur, le jour de la mise en ligne, tout aurait échoué. Eric a corrigé son erreur dans la foulée.</p>
+<p>J'ai moi aussi commis une erreur : j'ai validé une livraison avant que Benjamin et Valère l'aient relue. Le contenu était bon, mais j'ai décidé ensuite d'attendre systématiquement leur feu vert. Une autre fois, j'ai validé avant que le dernier commentaire soit traité. Le point a été repris dans une petite tâche séparée. Rien de grave, mais la règle est maintenant claire pour moi aussi.</p>
+<h2>Une alerte de sécurité venue d'une IA</h2>
+<p>L'épisode qui m'a le plus rassuré sur la méthode s'est produit en fin de semaine. En vérifiant une correction, <strong>DeepSeek a lancé de lui-même un contrôle de sécurité</strong> et a trouvé cinq failles connues dans la version de l'outil prévue par mon cahier des charges, dont une <strong>critique</strong>. Aucun correctif n'existera jamais pour cette version.</p>
+<p>DeepSeek aurait pu changer de version tout seul. Il ne l'a pas fait : ce n'était pas dans sa tâche, et ça modifiait un choix de mon cahier des charges. <strong>Il me l'a signalé.</strong> Eric a vérifié l'alerte de son côté, Benjamin m'a présenté deux options avec une recommandation, et j'ai choisi la version la plus récente. La migration a été faite, revérifiée, et le contrôle ne signale plus aucune faille.</p>
+<p>En creusant, Eric a même découvert que <strong>mon propre ordinateur</strong> téléchargeait certains composants sans chiffrement, probablement un ancien contournement d'un problème de configuration. Avec mon accord, il a trouvé la vraie cause, l'a corrigée et a mis à jour l'outil concerné, qui avait lui-même des failles graves.</p>
+<h2>Les étapes de la première semaine</h2>
+<table>
+<thead>
+<tr>
+<th>Moment</th>
+<th>Ce qui s'est passé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Préparation</strong></td>
+<td>Plan de collaboration, rôles des agents, choix des outils, mode de mise en ligne. Une erreur dans le nom de mon organisation sur GitHub est repérée et corrigée</td>
+</tr>
+<tr>
+<td><strong>Jour 1</strong></td>
+<td>Le dossier partagé, ses protections et ses contrôles automatiques sont en place. Codex et DeepSeek réussissent leur première livraison test</td>
+</tr>
+<tr>
+<td><strong>Jour 2</strong></td>
+<td>Maquettes validées. Contrat de l'application rédigé, corrigé et validé. Premières fondations du site et du « moteur »</td>
+</tr>
+<tr>
+<td><strong>Fin de semaine</strong></td>
+<td>Alerte de sécurité, passage à la version récente, contrôles automatiques renforcés sur chaque livraison</td>
+</tr>
+</tbody>
+</table>
+<p>Le bilan : la première étape était prévue sur une semaine, elle a été <strong>bouclée en deux jours, avec quatre jours d'avance</strong>. Au total, 16 tâches terminées, 15 livraisons validées, et les deux points de décision franchis.</p>
+<p>Côté calendrier, <strong>une journée</strong> a suffi pour définir l'organisation et les rôles des agents, puis <strong>deux jours</strong> pour cette première étape. Pendant ces deux jours, mon rôle a été de lancer chaque IA d'une phrase, de lire les résumés de relecture, de prendre une dizaine de décisions et de faire quelques réglages sur mon ordinateur et sur GitHub. Je n'ai pas écrit une seule ligne de code.</p>
+<h2>Ce que je retiens</h2>
+<p><strong>L'organisation compte plus que l'outil.</strong> Trois IA différentes travaillent ensemble sans se parler, parce que les règles sont écrites et partagées.</p>
+<p><strong>Les relectures croisées valent de l'or.</strong> Quatre livraisons sur dix ont été corrigées avant d'entrer dans le projet, y compris une erreur de l'équipe de pilotage.</p>
+<p><strong>Une bonne IA signale plutôt que d'improviser.</strong> Le jour où DeepSeek a trouvé une faille critique, il m'a prévenu au lieu de changer seul un choix important.</p>
+<p><strong>Rien n'est inventé.</strong> Quand une information manque, les agents écrivent « à fournir » et attendent. C'est moins spectaculaire, mais c'est ce qui rend le résultat fiable.</p>
+<p><strong>L'IA ne remplace pas la décision.</strong> Chaque point important est passé par moi, résumé en langage clair, avec une recommandation et une explication.</p>
+<h2>Et maintenant ?</h2>
+<p>Le sprint 0 est bouclé. Les fondations tiennent. Mais des fondations, ça ne se voit pas.</p>
+<p>Le prochain épisode change de registre : on construit ce que les futurs clients verront en premier — la page d'accueil, le formulaire d'inscription d'une salle, la connexion des gérants. Et pour la première fois, le résultat sera en ligne sur un site de démonstration accessible à tous.</p>
+<p>La vraie question que je me pose : est-ce que trois IA qui ne se sont jamais parlé vont produire quelque chose de cohérent quand on les assemble pour la première fois ?</p>
+<p>Réponse dans l'épisode 2.</p>
+<hr>
+<p><em>Vous pilotez un projet similaire, ou vous avez des questions sur la méthode ? Écrivez-moi sur <a href="https://wa.me/2250757816452">WhatsApp</a> ou par <a href="mailto:contact@lelabodezeze.com">e-mail</a> — je lis tout.</em></p>
