@@ -27,8 +27,8 @@ Sur le serveur, un seul dossier reçoit la branche `deploy-staging` :
 └── VERSION         ← version déployée
 ```
 
-> **Noms proposés :** `staging.abidjangym.com` (site public) et `api-staging.abidjangym.com` (API et backoffice).
-> Le CDC §3.3 ne prévoit que `staging.abidjangym.com` : le second sous-domaine est une proposition d'Eric, à valider.
+> **Noms retenus :** `staging.abidjangym.com` (site public) et `api-staging.abidjangym.com` (API et backoffice).
+> Le second sous-domaine, absent du CDC §3.3, a été **validé par Rufin le 01/11/2026**. Il sera ajouté au CDC à sa prochaine version.
 
 **Rien n'est mis en ligne tant que tu n'as pas terminé l'étape 7** : la publication de la branche fonctionne dès le merge, mais la mise à jour du serveur attend ton feu vert.
 
