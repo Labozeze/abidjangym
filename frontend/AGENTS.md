@@ -49,7 +49,7 @@ Le résultat du build (`.output/public`) est déployé tel quel sur Hostinger : 
 WCAG 2.1 AA : contrastes suffisants, navigation complète au clavier, `aria-label` sur les boutons-icônes, focus visible.
 
 ## Travailler sans attendre le backend
-Tant que l'API n'est pas prête, développe contre le **serveur fictif** généré depuis `docs/api/openapi.yaml` (Prism). Eric documentera la commande dans `docs/ops/serveur-fictif.md`. Si un endpoint dont tu as besoin manque dans le contrat, **ne l'invente pas** : signale-le dans ta PR, Benjamin le demandera à l'Entité B.
+Tant que l'API n'est pas prête, développe contre le **serveur fictif** généré depuis `docs/api/openapi.yaml` (Prism). Mode d'emploi : `docs/ops/serveur-fictif.md`. Attention, le serveur fictif n'a **pas** de préfixe `/api/v1` : `NUXT_PUBLIC_API_BASE=http://127.0.0.1:4010`. N'écris jamais `/api/v1` en dur dans le code. Si un endpoint dont tu as besoin manque dans le contrat, **ne l'invente pas** : signale-le dans ta PR, Benjamin le demandera à l'Entité B.
 
 ## À ne pas faire
 - Modifier `backend/`, `docs/api/`, `demo/`, `photos/` ou tout fichier hors de `frontend/`
