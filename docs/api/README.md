@@ -1,4 +1,4 @@
-# Contrat d'API AbidjanGym — v0.2
+# Contrat d'API AbidjanGym — v0.3
 
 **Statut : brouillon soumis à la validation de Rufin** (CDC §2.5.4.b, point de contrôle 2).
 Aucune implémentation backend ne démarre avant cette validation.
@@ -6,11 +6,11 @@ Aucune implémentation backend ne démarre avant cette validation.
 | Élément | Valeur |
 |---|---|
 | Fichier de référence | [`openapi.yaml`](openapi.yaml) — OpenAPI 3.0.3 |
-| Version du contrat | 0.2.0 |
+| Version du contrat | 0.3.0 |
 | Périmètre | `docs/api/` (Entité B) |
-| Ticket | #9 — Contrat d'API v0.1 |
+| Tickets | #9 — contrat v0.1 puis v0.2 (relecture) ; #23 — activation des moyens de paiement (v0.3) |
 | Relecture | PR #20 — commentaires de l'Entité C (Eric, Benjamin, Valère) intégrés, arbitrages de Rufin du 01/11/2026 appliqués |
-| Références | CDC §4.1.4, §4.1.5, §4.2, §6.2, §6.3, §6.4, §7.2, §10 |
+| Références | CDC §4.1.4, §4.1.5, §4.2, §4.2.6, §6.2, §6.3, §6.4, §6.6, §7.2, §10 |
 
 Ce README est la **synthèse lisible** du contrat. En cas de divergence, `openapi.yaml` fait foi.
 
@@ -18,7 +18,7 @@ Ce README est la **synthèse lisible** du contrat. En cas de divergence, `openap
 
 ## 1. Ce que couvre le contrat
 
-**66 opérations** réparties en douze domaines. Tous les flux du CDC §10 sont réalisables
+**68 opérations** réparties en treize domaines. Tous les flux du CDC §10 sont réalisables
 (voir le tableau de correspondance en §4).
 
 | Domaine | Opérations | Contenu |
@@ -31,6 +31,7 @@ Ce README est la **synthèse lisible** du contrat. En cas de divergence, `openap
 | Abonnés | 14 | CRUD, recherche, filtres, export CSV, QR code (téléchargement, régénération, renvoi), historiques |
 | Abonnements | 6 | création, détail, renouvellement, suspension, réactivation |
 | Paiements | 11 | enregistrement, liste avec totaux, reçu PDF, lien 72 h, justificatif, confirmation, annulation, callbacks Mobile Money |
+| Moyens de paiement | 2 | activation on/off et configuration des sept moyens (CDC §4.2.6) |
 | Contrôle d'accès | 2 | scan `GET /access/{uuid}`, historique des entrées |
 | Tableau de bord | 1 | les huit widgets du CDC §4.2.2 en un appel |
 | Espace abonné | 8 | lien magique, profil, abonnement, historiques, QR code |
@@ -169,7 +170,7 @@ rôle `admin` : la salle se retrouverait sans administrateur (`422`).
 | Méthode | Route | Rôle |
 |---|---|---|
 | GET | `/payments` | liste filtrable + totaux par mode sur la période |
-| POST | `/payments` | enregistrement (espèces, Mobile Money, virement, chèque) |
+| POST | `/payments` | enregistrement — **refuse en `422` un moyen désactivé** (CDC §4.2.6) |
 | GET | `/payments/export` | export CSV comptable |
 | POST | `/payments/callback/{provider}` | callback prestataire : `orange`, `mtn`, `wave`, `cinetpay` (public, signé) |
 | GET | `/payments/{paymentId}` | détail |
@@ -179,6 +180,25 @@ rôle `admin` : la salle se retrouverait sans administrateur (`422`).
 | POST | `/payments/{paymentId}/proof` | justificatif, 5 Mo max |
 | GET | `/payments/{paymentId}/receipt` | reçu PDF |
 | POST | `/payments/{paymentId}/receipt/link` | lien de partage valable 72 h |
+
+### Moyens de paiement (activation on/off, CDC §4.2.6 — ajout v2.2)
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| GET | `/gyms/current/payment-methods` | les sept moyens, leur état et leur configuration non sensible — gérant **et** caissier |
+| PATCH | `/gyms/current/payment-methods/{method}` | activer, désactiver, configurer — **gérant uniquement** (caissier : `403`) |
+
+Règles :
+
+- à l'inscription d'une salle, **seules les espèces sont activées** ; les autres moyens restent
+  désactivés tant qu'ils ne sont pas configurés (décision de Rufin du 01/11/2026) ;
+- **seuls les moyens activés** sont proposés à l'encaissement ; `POST /payments` refuse un moyen
+  désactivé en `422`, avec un message en français ;
+- une activation sans configuration minimale est refusée en `422` — un moyen non configuré
+  n'a rien à proposer au caissier ;
+- les **identifiants secrets** se saisissent via `credentials`, en écriture seule : chiffrés en
+  base (AES-256, CDC §6.6) et **jamais** renvoyés par l'API, ni à la lecture ni dans la réponse
+  d'écriture.
 
 ### Contrôle d'accès et tableau de bord
 
@@ -266,6 +286,7 @@ Arbitrées par Rufin à l'issue de la relecture de la v0.1, sur recommandation d
 | 5 | `per_page` maximum | **100** (défaut 20) |
 | 6 | Reçu personnalisable | Tranché par le CDC §4.2.8 : c'est le **gérant** qui configure le QR code et la signature/cachet, désormais exposés via `receipt` dans `PATCH /gyms/current` et `POST /gyms/current/receipt-signature` |
 | 7 | Chemin du callback | URL du CDC §10.5 **conservée**, `{paymentId}` contraint côté routes Laravel |
+| 8 | Activation des moyens de paiement | **On/off par le gérant** (CDC §4.2.6, ajout CDC v2.2, décision de Rufin du 01/11/2026) : seuls les moyens activés sont proposés, un paiement avec un moyen désactivé est refusé en `422`. À l'inscription, **seules les espèces sont activées**, les autres restent désactivés tant qu'ils ne sont pas configurés |
 
 ---
 
@@ -277,7 +298,8 @@ Aucune valeur réelle n'a été inventée (AGENTS.md §5.3). À fournir par Rufi
 |---|---|
 | En-tête et algorithme de signature des callbacks Orange Money, MTN MoMo, Wave, CinetPay | `POST /payments/callback/{provider}` |
 | Charge utile exacte de chaque prestataire | schéma du corps du callback |
-| Identifiants API des prestataires (chiffrés AES-256 en base, CDC §6.6) | configuration salle, hors contrat |
+| Identifiants API des prestataires (chiffrés AES-256 en base, CDC §6.6) | `credentials` de `PATCH /gyms/current/payment-methods/{method}` — **écriture seule** |
+| Nom exact des clés d'identifiants attendues par prestataire (orange, mtn, wave, cinetpay) | schéma `PaymentMethodSettingsInput.credentials` |
 | SMTP sortant pour les emails transactionnels et les invitations | `POST /contact-messages`, `POST /auth/forgot-password`, `POST /users` |
 | Fournisseur WhatsApp Business et SMS (Twilio, 360dialog, Infobip…) | notifications, hors v0.1 |
 | Adresse email de contact technique | `info.contact.email` |
@@ -286,10 +308,10 @@ Aucune valeur réelle n'a été inventée (AGENTS.md §5.3). À fournir par Rufi
 
 ---
 
-## 8. Hors périmètre de la v0.1
+## 8. Hors périmètre de la v0.3
 
-Ces éléments du CDC existent mais ne sont pas contractualisés ici ; ils relèvent d'une v0.3,
-dès que les flux principaux sont validés :
+Ces éléments du CDC existent mais ne sont pas contractualisés ici ; ils relèvent d'une version
+ultérieure, dès que les flux principaux sont validés :
 
 - configuration et journal des notifications (CDC §4.2.7) ;
 - rapports et analyses avec export PDF/CSV (CDC §4.2.11) ;
@@ -307,3 +329,4 @@ dès que les flux principaux sont validés :
 |---|---|---|---|
 | 0.1.0 | 31 oct. 2026 | Entité B (DeepSeek), ticket #9 | Version initiale : 62 opérations, schémas, sécurité, erreurs, pagination |
 | 0.2.0 | 01 nov. 2026 | Entité B (DeepSeek), relecture PR #20 | Arbitrages de Rufin intégrés (Sanctum, session 8 h, lien magique 15 min, offset, `per_page` 100, reçu par le gérant, callback conservé) ; ajout de la gestion des caissiers (`/users`) ; `429` sur les routes publiques à jeton ; `403` caissier sur `PATCH /payments/{paymentId}` ; avertissement sur le `GET /access/{uuid}` ; 66 opérations |
+| 0.3.0 | 01 nov. 2026 | Entité B (DeepSeek), ticket #23 | Activation on/off des moyens de paiement (CDC v2.2, §4.2.6) : schémas `PaymentMethodSetting`, `PaymentMethodConfiguration`, `PaymentMethodSettingsInput`, routes `GET` et `PATCH /gyms/current/payment-methods`, refus `422` d'un moyen désactivé dans `POST /payments`, identifiants secrets en écriture seule ; 68 opérations |
