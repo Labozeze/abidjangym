@@ -7,10 +7,12 @@ namespace App\Models;
 use App\Enums\UserRole;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Utilisateur d'une salle : gérant (`admin`) ou caissier (`cashier`) — CDC §4.2.10.
@@ -18,10 +20,10 @@ use Illuminate\Notifications\Notifiable;
  * Multi-tenant : le trait `BelongsToTenant` filtre toute requête sur la salle courante et
  * refuse une écriture visant une autre salle.
  *
- * ⚠️ Conséquence pour le ticket d'authentification : la connexion se fait par email + mot
- * de passe, or le même email peut exister dans plusieurs salles. La recherche du compte
- * devra donc se faire **hors** du scope, puis poser le `TenantContext` à partir du
- * `tenant_id` du compte trouvé :
+ * ⚠️ L'email est désormais **unique sur toute la plateforme** (décision du 01/11/2026) : la
+ * connexion peut donc retrouver un compte à partir du seul email. La recherche doit malgré
+ * tout se faire **hors** du scope multi-tenant, puisque le contexte n'existe pas encore à
+ * ce moment-là :
  *
  *     $user = User::withoutTenantScope()->where('email', $email)->first();
  *     // … vérification du mot de passe, puis :
@@ -40,6 +42,7 @@ use Illuminate\Notifications\Notifiable;
 final class User extends Authenticatable
 {
     use BelongsToTenant;
+    use HasApiTokens;
 
     /** @use HasFactory<UserFactory> */
     use HasFactory;
@@ -83,6 +86,18 @@ final class User extends Authenticatable
     public function gym(): BelongsTo
     {
         return $this->belongsTo(Gym::class, 'tenant_id');
+    }
+
+    /**
+     * Email normalisé en minuscules : clé de connexion et de réinitialisation.
+     *
+     * @return Attribute<string, string>
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value): string => mb_strtolower(trim($value)),
+        );
     }
 
     public function isAdmin(): bool

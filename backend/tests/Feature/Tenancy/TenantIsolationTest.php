@@ -12,6 +12,7 @@ use App\Models\Gym;
 use App\Models\PaymentMethodSetting;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -92,13 +93,14 @@ final class TenantIsolationTest extends TestCase
         });
     }
 
-    public function test_the_same_email_can_exist_in_two_gyms(): void
+    public function test_the_email_is_unique_across_the_platform(): void
     {
         $this->createUser($this->gymA, 'contact@example.com');
-        $this->createUser($this->gymB, 'contact@example.com');
 
-        $this->context->run($this->gymA->id, fn () => $this->assertSame(1, User::query()->count()));
-        $this->context->run($this->gymB->id, fn () => $this->assertSame(1, User::query()->count()));
+        $this->expectException(QueryException::class);
+
+        // Décision du 01/11/2026 : un email ne peut appartenir qu'à une seule salle.
+        $this->createUser($this->gymB, 'contact@example.com');
     }
 
     public function test_without_tenant_context_no_row_is_visible(): void
