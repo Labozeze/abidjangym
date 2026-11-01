@@ -13,8 +13,12 @@ describe("AppHeader", () => {
       "Navigation principale",
     );
     expect(wrapper.findAll("nav a").map((link) => link.text())).toEqual([
-      "Accueil",
       "Fonctionnalités",
+      "Pour les gérants",
+      "Tarifs",
+      "FAQ",
+      "J’inscris ma salle",
     ]);
+    expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
   });
 });
