@@ -45,7 +45,7 @@
 - **[Entité C — Eric]** Dossiers de travail créés : `abidjangym-front` (Codex) et `default-workspace\abidjangym-back` (DeepSeek), tous deux sur `develop`. *(Source : ticket #2)*
 - **Réglage de l'organisation modifié par Rufin :** GitHub Actions peut désormais ouvrir les PR automatiquement. *(Source : ticket #13, 31/10)*
 - **[Entité B — DeepSeek] Test de la chaîne réussi (#6, PR #15).** Le `git push` passe depuis le bac à sable de DeepSeek harness, la PR s'ouvre toute seule. C'était le point le plus incertain du plan. *(Source : PR #15)*
-- **[Entité A — Codex] Test de la chaîne réussi (#5, PR #16).** Rufin a mergé avant la relecture de Benjamin et Valère, puis a décidé : « la prochaine fois je laisse Benjamin et Valère lire avant ». Depuis, chaque merge attend leur commentaire. *(Source : PR #16, message de Rufin du 31/10)*
+- **[Entité A — Codex] Test de la chaîne réussi (#5, PR #16).** Rufin a mergé avant la relecture de Benjamin et Valère, puis a décidé d'attendre désormais leur relecture avant chaque merge. Depuis, chaque merge attend leur commentaire. *(Source : PR #16, message de Rufin du 31/10)*
 
 ### Jours 1 et 2 — du 31/10 au 01/11 : les deux points de contrôle
 - **[Entité A — Codex] Audit des maquettes (#7, PR #17).** Travail jugé de très bonne qualité, mais **première correction demandée** : l'audit renvoyait à Rufin la durée d'essai et les prix, alors que le CDC §1.3 les fixe déjà (2 mois). Codex a corrigé, ce qui a retiré deux décisions inutiles à Rufin. *(Source : relectures de la PR #17)*
