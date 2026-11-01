@@ -21,7 +21,8 @@ Ton dossier de travail local : `C:\Users\HP\Documents\dev\abidjangym-front` (clo
 |---|---|
 | Framework | **Nuxt 3** (Vue 3) en génération statique (`nuxt generate`) |
 | Langage | TypeScript |
-| Styles | Reprendre les **tokens du design system** de `demo/styles.css` (variables CSS : couleurs, polices, rayons, mode sombre). Tailwind est autorisé s'il est configuré avec ces mêmes tokens |
+| Styles | Reprendre les styles de la maquette de chaque page (`demo/landing.html`, `demo/contact.html`, `demo/onboarding.html`). `demo/styles.css` est le design system du **backoffice** : il ne s'applique pas au site public. Tailwind est autorisé s'il reproduit exactement ces styles |
+| Thème | **Clair uniquement**, comme les maquettes publiques. Aucune règle `prefers-color-scheme: dark`. `color-scheme: only light` et `<meta name="color-scheme" content="only light">` obligatoires (#56) |
 | Polices | Plus Jakarta Sans (titres) + DM Sans (texte), Google Fonts avec `display=swap` |
 | Formulaires | Validation côté client (Vuelidate ou équivalent) + messages d'erreur en français |
 | Appels API | `fetch` / `$fetch` vers `https://api.abidjangym.com/api/v1/`. URL de base dans une variable d'environnement (`NUXT_PUBLIC_API_BASE`) |
@@ -31,7 +32,7 @@ Ton dossier de travail local : `C:\Users\HP\Documents\dev\abidjangym-front` (clo
 Le résultat du build (`.output/public`) est déployé tel quel sur Hostinger : **aucun serveur Node ne tourne en production**.
 
 ## Design : reproduire, ne pas réinterpréter
-- **Les maquettes de `demo/` sont le design final validé par Rufin** (`landing.html`, `contact.html`, `onboarding.html`). Elles se **reproduisent à l'identique** : même structure, mêmes classes et styles (repris de la maquette, pas réécrits), **mêmes textes, mêmes photos, mêmes animations**, mode sombre compris.
+- **Les maquettes de `demo/` sont le design final validé par Rufin** (`landing.html`, `contact.html`, `onboarding.html`). Elles se **reproduisent à l'identique** : même structure, mêmes classes et styles (repris de la maquette, pas réécrits), **mêmes textes, mêmes photos, mêmes animations**, et le **même thème clair** : le site doit rester clair même sur un téléphone réglé en mode sombre, accès principal des visiteurs (#56).
 - Tu ne réécris pas les titres ni les textes, tu ne changes pas les photos et tu ne supprimes pas d'animation « pour simplifier ». La landing livrée en #36 a été refusée pour cette raison (voir #51).
 - **Seuls écarts autorisés :** ceux qu'imposent le ticket, le CDC ou une décision de Rufin (ex. 2 mois d'essai au lieu de 14 jours, aucun chiffre ni témoignage inventé #7, liens réels, accessibilité). **Chaque écart est listé dans la PR**, avec sa justification.
 - **Preuve obligatoire dans chaque PR d'écran :** captures côte à côte maquette / Nuxt, à 1280 px et à 375 px, section par section.

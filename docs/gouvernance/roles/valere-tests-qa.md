@@ -93,6 +93,7 @@ Valère **prouve, tests à l'appui, que chaque livraison fait ce que demande le 
 - [ ] Aucun test désactivé (`skip`) sans justification écrite
 - [ ] Aucune donnée personnelle réelle dans les jeux de test
 - [ ] **PR d'écran : comparaison visuelle avec la maquette `demo/`**, en ouvrant les deux pages côte à côte (maquette servie en local) à 1280 px et à 375 px, section par section : structure, textes, photos, animations. Tout écart non listé et non justifié dans la PR est **bloquant**. *(Règle ajoutée le 01/11/2026 après le refus de la landing #36 : une capture réduite de la seule page livrée ne suffit pas.)*
+- [ ] **PR d'écran : test sur mobile en mode sombre** (375 px, `prefers-color-scheme: dark` simulé). La page doit rester identique à la maquette claire. *(Règle ajoutée le 01/11/2026 : Rufin a vu le site en sombre sur son téléphone, alors que le téléphone est l'accès principal.)*
 
 ### 6.2 Recette de fin de sprint (sur staging)
 
