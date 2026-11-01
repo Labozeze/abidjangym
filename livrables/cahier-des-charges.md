@@ -4,7 +4,7 @@
 **Client :** Rufin Ismael Baroan — Le Labo de Zézé  
 **Domaine :** https://abidjangym.com/  
 **Date :** Octobre 2026  
-**Version :** 2.3  
+**Version :** 2.4  
 **Statut :** Document de référence — toutes les entités doivent s'y conformer
 
 ---
@@ -41,6 +41,13 @@ AbidjanGym est une plateforme SaaS multi-tenant destinée aux gérants de salles
 ### 1.3 Modèle économique
 - Abonnement SaaS mensuel par salle (Starter gratuit, Essentiel 15 000 FCFA/mois, Pro 35 000 FCFA/mois)
 - 2 mois d'essai gratuit sur toutes les formules payantes, sans carte bancaire
+- **Contenu des formules** *(offres officielles, ajout v2.4)* :
+
+| Formule | Prix | Inclus |
+|---|---|---|
+| **Starter** | Gratuit | Jusqu'à 50 abonnés · QR code d'accès · Paiements Mobile Money · Notifications WhatsApp · Rapports avancés |
+| **Essentiel** | 15 000 FCFA/mois, sans engagement | Abonnés illimités · QR code + domotique · Mobile Money · Notifications WhatsApp et SMS · Rapports + export PDF/CSV |
+| **Pro** | 35 000 FCFA/mois | Tout l'Essentiel · Multi-salles (5 maximum) · API et intégrations · Support prioritaire WhatsApp · Formation incluse (2 h) |
 - Évolution future : commission sur les paiements en ligne traités via la plateforme
 
 ---
@@ -193,7 +200,8 @@ Le projet est hébergé sur un **espace web Hostinger** (hébergement mutualisé
 | `www.abidjangym.com` | Redirect vers `abidjangym.com` | Entité C |
 | `app.abidjangym.com` | Backoffice (admin/caissier) | Entité B |
 | `api.abidjangym.com` | API REST | Entité B |
-| `staging.abidjangym.com` | Environnement de staging | Entité C |
+| `staging.abidjangym.com` | Environnement de staging (site public) | Entité C |
+| `api-staging.abidjangym.com` | Environnement de staging (API et backoffice) *(ajout v2.4)* | Entité C |
 | `member.abidjangym.com` | Espace abonné | Entité A |
 
 ---
@@ -262,7 +270,7 @@ Interface simplifiée pour les membres des salles :
 #### 4.2.1 Authentification
 | Écran | Description |
 |---|---|
-| Connexion | Email + mot de passe. Token JWT stocké en httpOnly cookie. |
+| Connexion | Email + mot de passe. Token JWT stocké en httpOnly cookie. **L'email d'un compte gérant ou caissier est unique sur toute la plateforme** *(ajout v2.4)*. |
 | Mot de passe oublié | Envoi d'un lien de réinitialisation par email (validité 1h). |
 | Réinitialisation | Formulaire de nouveau mot de passe (min. 8 caractères, 1 majuscule, 1 chiffre). |
 | Déconnexion | Révocation du token côté serveur. |
@@ -688,7 +696,7 @@ Actions requises :
 À configurer dans `.htaccess` (Hostinger/Apache) :
 
 ```
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: *.cloudflare.com; frame-ancestors 'none';
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: *.cloudflare.com; connect-src 'self' <origine de l'API>; frame-ancestors 'none'; base-uri 'self'; form-action 'self';
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
 X-XSS-Protection: 1; mode=block
@@ -963,3 +971,4 @@ Admin → Fiche abonné → "Enregistrer un paiement" → Mode : Orange Money
 | 2.1 | 30 oct. 2026 | Benjamin (Entité C), validé par Rufin I. Baroan | §7.3 : organisation GitHub corrigée (`Labozeze` au lieu de `lelabodeze`). L'organisation des entités et le mode de déploiement sont détaillés dans `docs/gouvernance/plan-de-collaboration.md` v1.0 |
 | 2.2 | 1er nov. 2026 | Benjamin (Entité C), décision de Rufin I. Baroan | §4.2.6 : activation on/off de chaque moyen de paiement par le gérant, seuls les moyens activés sont proposés (décision prise lors de la relecture de la FAQ, PR #22, ticket #23) |
 | 2.3 | 1er nov. 2026 | Benjamin (Entité C), décision de Rufin I. Baroan | §3.1 et §7.2 : **Laravel 13 (≥ 13.30) et PHP 8.3** au lieu de Laravel 11 / PHP 8.2. Laravel 11 n'est plus maintenu et `composer audit` y relève 5 failles, dont une critique (CVE-2026-114509), sans correctif dans cette branche (signalé par DeepSeek, PR #28, confirmé par Eric, ticket #30) |
+| 2.4 | 1er nov. 2026 | Benjamin (Entité C), décisions de Rufin I. Baroan | §1.3 : **contenu des formules** Starter, Essentiel et Pro, repris de la maquette validée et confirmé comme offres officielles (#51). §3.3 : sous-domaine `api-staging.abidjangym.com` (#42). §4.2.1 : **email unique sur toute la plateforme** pour les comptes gérant et caissier (#40). §6.5 : CSP complétée par `connect-src` vers l'API (sans elle, le navigateur bloquerait les appels du front), `base-uri` et `form-action` (#42) |
