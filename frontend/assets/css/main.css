@@ -1288,6 +1288,15 @@ footer {
   color: var(--fg);
 }
 
+.owner-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
 /* ── RESPONSIVE ──────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .hero-inner {
@@ -1328,8 +1337,13 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 900px) {
+  .owner-inner {
+    grid-template-columns: 1fr;
+  }
+}
 
-/* ── FAQ, accessibilité et thème sombre ─────────────────────────── */
+/* ── FAQ et accessibilité ────────────────────────────────────────── */
 .site-shell {
   min-height: 100vh;
 }
