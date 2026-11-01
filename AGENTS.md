@@ -34,10 +34,11 @@ Tu ne communiques avec les autres entités **que par ce dépôt** : tickets (iss
    Exemples : `feature/a-7-squelette-nuxt`, `feature/b-4-contrat-api`. Les lettres sont en minuscules (`a`, `b`, `c`). Toute autre forme de nom fait échouer la CI.
 3. **Travaille par petits commits** dans ton périmètre.
 4. **Termine par un commit de livraison** dont le message suit le modèle de la section 4. Ce message **devient la description de ta PR**.
-5. **Pousse ta branche :** `git push -u origin <ta-branche>`. La PR vers `develop` s'ouvre **automatiquement**. Tu n'as pas besoin de `gh`.
+5. **Récupère `develop` puis pousse ta branche :** `git pull origin develop` (pour éviter les conflits si `develop` a avancé pendant ton travail), puis `git push -u origin <ta-branche>`. La PR vers `develop` s'ouvre **automatiquement**. Tu n'as pas besoin de `gh`.
 6. **Vérifie la CI.** Si elle échoue, corrige et pousse à nouveau sur la même branche (la PR se met à jour).
 7. **Traite les commentaires de relecture** (Benjamin, Valère, Eric) sur la même branche.
 8. **Tu ne merges jamais toi-même.** Le merge est fait après relecture et, si besoin, après validation de Rufin.
+9. **Tu n'ouvres pas de ticket toi-même.** Si tu découvres un problème hors de ton ticket (faille, bug, manque dans le contrat ou le CDC), **signale-le dans ta PR**, rubrique « Questions [À FOURNIR] ». Benjamin crée et priorise les tickets, pour éviter les doublons.
 
 ## 4. Modèle du message de commit de livraison
 
