@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\SanctumToken;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        /*
+         * Jetons Sanctum : le modèle personnalisé lève le scope multi-tenant sur la
+         * relation `tokenable`, sinon l'authentification par jeton ne trouverait jamais
+         * l'utilisateur (le contexte n'existe pas encore à ce moment-là).
+         */
+        Sanctum::usePersonalAccessTokenModel(SanctumToken::class);
     }
 }

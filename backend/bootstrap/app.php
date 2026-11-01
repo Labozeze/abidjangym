@@ -1,5 +1,7 @@
 <?php
 
+use App\Exceptions\Auth\AuthenticationFailedException;
+use App\Http\Middleware\AcceptSessionCookie;
 use App\Http\Middleware\ResolveTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,8 +18,17 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         /*
-         * Alias posé pour le ticket d'authentification : à appliquer après le middleware
-         * d'authentification, sur les routes métier, ex. ['auth:sanctum', 'tenant'].
+         * Le backoffice s'authentifie par un cookie `httpOnly` : ce middleware le traduit en
+         * en-tête `Authorization` avant le guard Sanctum. Il passe avant tout middleware de
+         * route, l'en-tête explicite restant prioritaire pour les clients API.
+         */
+        $middleware->api(prepend: [
+            AcceptSessionCookie::class,
+        ]);
+
+        /*
+         * Alias `tenant` : à appliquer après l'authentification, sur les routes métier
+         * (ex. ['auth:sanctum', 'tenant']).
          */
         $middleware->alias([
             'tenant' => ResolveTenantContext::class,
@@ -26,5 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+        );
+
+        // Échecs d'authentification : 401 avec un message en français, jamais de détail
+        // permettant d'énumérer les comptes.
+        $exceptions->render(
+            fn (AuthenticationFailedException $e) => response()->json(['message' => $e->getMessage()], 401)
         );
     })->create();

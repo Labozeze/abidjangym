@@ -42,6 +42,16 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        /*
+         * Guard des jetons Sanctum : sert les routes de l'API et du backoffice.
+         * Le middleware `AcceptSessionCookie` transforme le cookie `ag_session`
+         * (httpOnly) en en-tête `Authorization: Bearer …` avant ce guard.
+         */
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
     ],
 
     /*
