@@ -1,0 +1,135 @@
+# Déploiement automatique sur staging — maintenu par Eric (Entité C)
+# Plan de collaboration §5 : Hostinger ne suit jamais develop. La CI construit
+# un site prêt à l'emploi (front généré, vendor/ installé) et le publie sur la
+# branche deploy-staging, écrite uniquement par ce workflow. Le serveur est
+# ensuite mis à jour en SSH (pull, migrations, caches), dans cet ordre.
+name: Déploiement staging
+
+on:
+  push:
+    branches: [develop, 'feature/**']
+  workflow_dispatch:
+# Sur une branche de travail : simple répétition (construction + assemblage,
+# sans publication), et seulement si les fichiers de déploiement ont changé.
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    name: construire
+    runs-on: ubuntu-latest
+    env:
+      # Origine de l'API de staging, ex. https://api-staging.abidjangym.com
+      # (variable du dépôt, voir docs/ops/hostinger-git.md)
+      API_ORIGIN: ${{ vars.STAGING_API_ORIGIN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Faut-il construire ?
+        id: go
+        env:
+          BASE: develop
+        run: |
+          if [ "$GITHUB_REF_NAME" = "develop" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "change=true" >> "$GITHUB_OUTPUT"
+          else
+            bash .github/scripts/a-change.sh .github/workflows/deploy-staging.yml \
+              .github/scripts/assembler-deploiement.sh .github/scripts/serveur-mise-a-jour.sh ops/
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.go.outputs.change == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Front — génération statique
+        if: steps.go.outputs.change == 'true'
+        working-directory: frontend
+        run: |
+          if [ -n "$API_ORIGIN" ]; then export NUXT_PUBLIC_API_BASE="$API_ORIGIN/api/v1"; fi
+          npm ci --no-audit --no-fund
+          npm run generate
+
+      - uses: shivammathur/setup-php@v2
+        if: steps.go.outputs.change == 'true'
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_mysql, zip, bcmath
+          coverage: none
+          tools: composer:v2
+      - name: Back — dépendances de production
+        if: steps.go.outputs.change == 'true'
+        working-directory: backend
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Assemblage du site
+        if: steps.go.outputs.change == 'true'
+        env:
+          NOINDEX: 'true'
+        run: |
+          bash .github/scripts/assembler-deploiement.sh
+          echo "--- Contrôles de l'assemblage"
+          test -f _deploy/front/index.html
+          test -f _deploy/front/.htaccess && ! grep -q "__API_ORIGIN__\|__NOINDEX__" _deploy/front/.htaccess
+          test -f _deploy/api/vendor/autoload.php
+          test -f _deploy/api/public/index.php
+          test ! -e _deploy/api/tests && test ! -e _deploy/api/.env
+          head -3 _deploy/api/public/.htaccess
+          echo "Fichiers : $(find _deploy -type f | wc -l)"
+
+      - name: Publication sur la branche deploy-staging
+        if: github.ref_name == 'develop'
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd _deploy
+          git init -q -b deploy-staging
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Déploiement staging : ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" deploy-staging
+          echo "Branche deploy-staging publiée (${GITHUB_SHA::7})."
+
+  # Ne s'exécute que lorsque Rufin a configuré le serveur et les secrets
+  # (variable STAGING_DEPLOY_ENABLED = true, voir docs/ops/hostinger-git.md).
+  deployer:
+    name: deployer
+    needs: construire
+    if: ${{ vars.STAGING_DEPLOY_ENABLED == 'true' && github.ref_name == 'develop' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mise à jour du serveur (pull, migrations, caches)
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.STAGING_SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          SSH_PORT: ${{ secrets.STAGING_SSH_PORT }}
+          SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.STAGING_DEPLOY_PATH }}
+          PHP_BIN: ${{ vars.STAGING_PHP_BIN || 'php' }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_deploy -p "$SSH_PORT" -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" bash -s -- "$DEPLOY_PATH" "$PHP_BIN" deploy-staging \
+            < .github/scripts/serveur-mise-a-jour.sh
+
+      - name: Tests de fumée
+        env:
+          FRONT_URL: ${{ vars.STAGING_FRONT_URL }}
+          API_ORIGIN: ${{ vars.STAGING_API_ORIGIN }}
+        run: |
+          curl -fsS --retry 5 --retry-delay 5 -o /dev/null -w "Front : %{http_code}\n" "$FRONT_URL/"
+          curl -fsS --retry 5 --retry-delay 5 -w "\nAPI : %{http_code}\n" "$API_ORIGIN/api/v1/health"

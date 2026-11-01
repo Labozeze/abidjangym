@@ -1,0 +1,4 @@
+# .gitignore de l'API sur les branches deploy-* (vendor/ est inclus, volontairement)
+.env
+/storage/*.key
+/public/storage
