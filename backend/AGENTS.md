@@ -17,7 +17,7 @@ Ton dossier de travail local : `C:\Users\HP\Documents\deepseek-harness\default-w
 ## Stack imposée
 | Élément | Choix |
 |---|---|
-| Framework | **Laravel 11**, PHP 8.2+ |
+| Framework | **Laravel 13** (≥ 13.30), PHP 8.3+ (CDC v2.3) |
 | Base de données | MySQL 8 (Hostinger). SQLite autorisé **uniquement** pour les tests |
 | ORM | Eloquent, aucune requête SQL construite par concaténation |
 | Authentification | Laravel Sanctum. Jetons en cookie `httpOnly` pour le backoffice, Bearer pour l'API (CDC §6.2) |
@@ -44,7 +44,8 @@ Les identifiants réels (Orange Money, MTN, Wave, CinetPay, Twilio/360dialog, SM
 
 ## Ton outil (DeepSeek harness)
 - Tu ne peux écrire que dans ton espace de travail : c'est normal, ton clone y est.
-- `gh` n'est pas installé : c'est prévu. Pousse ta branche avec `git push -u origin <branche>`, la PR s'ouvre automatiquement.
+- `gh` est disponible : tu peux lire tes tickets avec `gh issue view <n°>`. Pousse ta branche avec `git push -u origin <branche>`, la PR s'ouvre automatiquement.
+- Avant chaque livraison qui touche aux dépendances : `composer validate --no-check-publish` (lock synchronisé) et `composer audit` (aucune faille connue).
 
 ## À ne pas faire
 - Modifier `frontend/`, `.github/`, `tests/` ou tout fichier hors de ton périmètre
