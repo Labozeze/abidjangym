@@ -1,24 +1,28 @@
 # Backend AbidjanGym — Entité B, DeepSeek.
 
-API REST et backoffice de la plateforme SaaS multi-tenant **AbidjanGym** (Laravel 11, PHP 8.2+).
+API REST et backoffice de la plateforme SaaS multi-tenant **AbidjanGym** (Laravel 13, PHP 8.3+).
 Contrat d'API : [`../docs/api/openapi.yaml`](../docs/api/openapi.yaml).
 
 | Élément | Version |
 |---|---|
-| Laravel | 11.57 |
-| PHP | 8.2+ |
+| Laravel | 13.39 |
+| PHP | 8.3+ |
 | Base de données | MySQL 8 (production) — SQLite en mémoire pour les tests |
-| Lint | Laravel Pint |
-| Tests | PHPUnit |
+| Lint | Laravel Pint 1.27 |
+| Tests | PHPUnit 12 |
 
 ---
 
 ## 1. Prérequis
 
-- PHP 8.2 ou supérieur, avec les extensions `pdo_mysql`, `pdo_sqlite`, `sqlite3`, `mbstring`,
-  `openssl`, `curl`, `dom`, `xml`, `tokenizer`, `fileinfo`, `zip`.
+- **PHP 8.3 ou supérieur** (Laravel 13 exige `^8.3`), avec les extensions `pdo_mysql`,
+  `pdo_sqlite`, `sqlite3`, `mbstring`, `openssl`, `curl`, `dom`, `xml`, `tokenizer`,
+  `fileinfo`, `zip`.
 - Composer 2.
 - MySQL 8 pour le développement local (SQLite suffit pour les tests).
+
+Sur ce poste, le binaire est `C:\wamp64\bin\php\php8.3.28\php.exe` : le `php` du `PATH` peut
+pointer sur une autre version, donc vérifier `php -v` avant de lancer Composer.
 
 Aucun Redis, aucun Docker, aucun worker de file d'attente : l'hébergement Hostinger est
 mutualisé (CDC §3.2). Les tâches asynchrones passent par le planificateur Laravel, lancé par
@@ -29,8 +33,7 @@ un cron `php artisan schedule:run`.
 ```bash
 cd backend
 
-composer install
-cp .env.example .env
+composer install      # crée aussi .env à partir de .env.example s'il manque
 php artisan key:generate
 
 # Renseigner les accès MySQL dans .env, puis :
@@ -39,6 +42,11 @@ php artisan serve
 ```
 
 L'API répond alors sur `http://localhost:8000/api/v1`.
+
+> **Laravel 13 et PHP 8.3.** La montée de version a été décidée après la détection de cinq
+> avis de sécurité sur Laravel 11 (dont un critique sur l'authentification par jeton),
+> corrigés à partir de 12.60–12.69 et absents de Laravel 13. Vérifier après toute mise à jour
+> des dépendances : `composer audit` doit rester silencieux.
 
 ## 3. Commandes utiles
 
