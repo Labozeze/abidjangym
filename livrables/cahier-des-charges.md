@@ -4,7 +4,7 @@
 **Client :** Rufin Ismael Baroan — Le Labo de Zézé  
 **Domaine :** https://abidjangym.com/  
 **Date :** Octobre 2026  
-**Version :** 2.1  
+**Version :** 2.2  
 **Statut :** Document de référence — toutes les entités doivent s'y conformer
 
 ---
@@ -422,6 +422,12 @@ Chaque paiement est lié à un abonné et à un abonnement. Les informations enr
 - Enregistrement manuel avec upload de la preuve (photo du chèque ou bordereau, max 5 MB)
 - Statut initial : "En attente de confirmation"
 - L'admin confirme manuellement → passage au statut "Confirmé" → génération du reçu
+
+##### Activation des moyens de paiement *(ajout v2.2)*
+
+- Chaque moyen de paiement (espèces, Orange Money, MTN MoMo, Wave, CinetPay, virement, chèque) s'**active ou se désactive (on/off)** dans les paramètres de la salle, par le gérant uniquement.
+- **Seuls les moyens activés sont proposés** lors de l'encaissement. Un paiement avec un moyen désactivé est refusé.
+- Les identifiants des prestataires saisis pour un moyen ne sont jamais réaffichés (écriture seule, chiffrés, voir §6.6).
 
 ##### Historique des paiements
 
@@ -955,3 +961,4 @@ Admin → Fiche abonné → "Enregistrer un paiement" → Mode : Orange Money
 | 1.0 | Oct. 2026 | Le Labo de Zézé | Version initiale |
 | 2.0 | Oct. 2026 | Le Labo de Zézé | Ajout : organisation multi-entités, hébergement Hostinger, SEO, Sécurité, Agent Blog, stack technique par entité |
 | 2.1 | 30 oct. 2026 | Benjamin (Entité C), validé par Rufin I. Baroan | §7.3 : organisation GitHub corrigée (`Labozeze` au lieu de `lelabodeze`). L'organisation des entités et le mode de déploiement sont détaillés dans `docs/gouvernance/plan-de-collaboration.md` v1.0 |
+| 2.2 | 1er nov. 2026 | Benjamin (Entité C), décision de Rufin I. Baroan | §4.2.6 : activation on/off de chaque moyen de paiement par le gérant, seuls les moyens activés sont proposés (décision prise lors de la relecture de la FAQ, PR #22, ticket #23) |
