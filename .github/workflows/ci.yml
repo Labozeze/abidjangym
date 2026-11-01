@@ -1,13 +1,16 @@
 # CI AbidjanGym — maintenue par Eric (Entité C)
 # Déclenchée sur push des branches de travail (les PR ouvertes par le bot
-# GITHUB_TOKEN ne déclenchent pas d'autres workflows) et sur les PR.
+# GITHUB_TOKEN ne déclenchent pas d'autres workflows) et sur les PR vers main.
+# Les PR vers develop viennent toujours d'une branche feature/* ou hotfix/*
+# déjà poussée : leurs checks viennent de l'exécution sur push (évite les
+# exécutions « action_required » sur les PR ouvertes par le bot).
 name: CI
 
 on:
   push:
     branches: ['feature/**', 'hotfix/**']
   pull_request:
-    branches: [develop, main]
+    branches: [main]
 
 permissions:
   contents: read
@@ -41,3 +44,97 @@ jobs:
           BRANCH: ${{ github.head_ref || github.ref_name }}
           BASE: ${{ github.base_ref || 'develop' }}
         run: bash .github/scripts/perimetre.sh
+
+  # Les jobs frontend et backend tournent toujours (ils sont exigés par la
+  # protection des branches) mais n'exécutent leurs étapes que si leur dossier
+  # a changé par rapport à la branche de base.
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Changements dans frontend/ ?
+        id: diff
+        working-directory: .
+        env:
+          BASE: ${{ github.base_ref || 'develop' }}
+        run: bash .github/scripts/a-change.sh frontend/ .github/workflows/ci.yml
+      - uses: actions/setup-node@v4
+        if: steps.diff.outputs.change == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Installation
+        if: steps.diff.outputs.change == 'true'
+        run: npm ci --no-audit --no-fund
+      - name: Lint (ESLint + Prettier)
+        if: steps.diff.outputs.change == 'true'
+        run: npm run lint
+      - name: Tests (Vitest)
+        if: steps.diff.outputs.change == 'true'
+        run: npm test
+      - name: Génération statique
+        if: steps.diff.outputs.change == 'true'
+        run: npm run generate
+      - name: Le site généré ne dépend d'aucun serveur Node
+        if: steps.diff.outputs.change == 'true'
+        run: |
+          test -f .output/public/index.html
+          if [ -d .output/server ]; then
+            echo "::error::.output/server existe : le front doit rester 100 % statique (Hostinger)."
+            exit 1
+          fi
+
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Changements dans backend/ ?
+        id: diff
+        working-directory: .
+        env:
+          BASE: ${{ github.base_ref || 'develop' }}
+        run: bash .github/scripts/a-change.sh backend/ .github/workflows/ci.yml
+      - uses: shivammathur/setup-php@v2
+        if: steps.diff.outputs.change == 'true'
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, zip, bcmath
+          coverage: none
+          tools: composer:v2
+      - name: Cache Composer
+        if: steps.diff.outputs.change == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer/files
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+      - name: composer.lock synchronisé
+        if: steps.diff.outputs.change == 'true'
+        run: composer validate --no-check-publish
+      - name: Installation
+        if: steps.diff.outputs.change == 'true'
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Aucune faille connue (composer audit)
+        if: steps.diff.outputs.change == 'true'
+        run: composer audit
+      - name: Style (Pint)
+        if: steps.diff.outputs.change == 'true'
+        run: ./vendor/bin/pint --test
+      - name: Tests (PHPUnit)
+        if: steps.diff.outputs.change == 'true'
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan test
