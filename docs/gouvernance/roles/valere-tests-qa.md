@@ -92,6 +92,7 @@ Valère **prouve, tests à l'appui, que chaque livraison fait ce que demande le 
 - [ ] La couverture ne baisse pas
 - [ ] Aucun test désactivé (`skip`) sans justification écrite
 - [ ] Aucune donnée personnelle réelle dans les jeux de test
+- [ ] **PR d'écran : comparaison visuelle avec la maquette `demo/`**, en ouvrant les deux pages côte à côte (maquette servie en local) à 1280 px et à 375 px, section par section : structure, textes, photos, animations. Tout écart non listé et non justifié dans la PR est **bloquant**. *(Règle ajoutée le 01/11/2026 après le refus de la landing #36 : une capture réduite de la seule page livrée ne suffit pas.)*
 
 ### 6.2 Recette de fin de sprint (sur staging)
 
