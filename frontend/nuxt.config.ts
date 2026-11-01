@@ -1,6 +1,10 @@
 export default defineNuxtConfig({
   modules: ["@nuxt/eslint"],
-  css: ["~/assets/css/main.css"],
+  css: [
+    "~/assets/css/main.css",
+    "~/assets/css/public-pages.css",
+    "~/assets/css/contact.css",
+  ],
   typescript: {
     strict: true,
   },
@@ -36,7 +40,7 @@ export default defineNuxtConfig({
   },
   nitro: {
     prerender: {
-      routes: ["/"],
+      routes: ["/", "/tarifs", "/contact"],
       crawlLinks: false,
     },
   },
