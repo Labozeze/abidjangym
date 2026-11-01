@@ -1,53 +1,65 @@
-# Proposition de FAQ — AbidjanGym
+# Questions fréquentes — AbidjanGym
 
 > Proposition à faire valider par Rufin avant intégration à la landing page.
 
 <!-- CDC §1.3 -->
 ## Quels sont les prix des formules ?
 
-Starter est gratuit. Essentiel coûte 15 000 FCFA par mois et Pro coûte 35 000 FCFA par mois. Les avantages détaillés et les limites de chaque formule sont [À FOURNIR].
+Starter est gratuit. Essentiel coûte 15 000 FCFA par mois et Pro coûte 35 000 FCFA par mois. Le détail de chaque formule est présenté sur la page Tarifs.
+
+<!-- [À FOURNIR] Avantages détaillés et limites de chaque formule. -->
+
+<!-- CDC §4.1.4 -->
+## Comment inscrire ma salle ?
+
+L’inscription se fait en ligne en quatre étapes : les informations de votre salle, votre compte administrateur, le choix de votre formule et la confirmation. Vous pouvez vérifier le récapitulatif avant de valider.
 
 <!-- CDC §1.3 -->
 ## Puis-je essayer AbidjanGym avant de payer ?
 
 Les formules payantes comprennent deux mois d’essai gratuit, sans carte bancaire. Starter est la formule gratuite.
 
-<!-- CDC §4.2.6 -->
-## Quels moyens de paiement la salle peut-elle accepter ?
+<!-- CDC §4.2.9 et §4.2.8 -->
+## De quel matériel ai-je besoin pour utiliser AbidjanGym ?
 
-Le CDC prévoit les espèces, Orange Money CI, MTN Mobile Money CI, Wave, CinetPay (Visa et Mastercard), le virement et le chèque. La disponibilité des comptes de paiement et la configuration des intégrations sont [À FOURNIR].
+Un smartphone ou une tablette avec caméra suffit pour scanner les QR codes des abonnés. Pour les reçus, vous pouvez imprimer depuis le navigateur ou utiliser une imprimante thermique ou réseau.
+
+<!-- CDC §1.2 et §4.2.3 -->
+## Puis-je personnaliser AbidjanGym aux couleurs de ma salle ?
+
+Oui. Vous pouvez ajouter le logo de votre salle et choisir ses couleurs. Le logo et les couleurs peuvent apparaître sur les reçus.
+
+<!-- CDC §4.2.6 -->
+## Quels moyens de paiement puis-je accepter ?
+
+Vous pouvez accepter les espèces, Orange Money, MTN Mobile Money, Wave, le virement et le chèque. Pour les cartes Visa et Mastercard, les paiements passent par CinetPay.
 
 <!-- CDC §4.2.6 et §4.2.8 -->
 ## Un reçu est-il fourni après un paiement ?
 
-Un reçu est généré immédiatement pour un paiement en espèces ; un reçu PDF est aussi prévu pour les paiements enregistrés. Le reçu peut être téléchargé depuis le navigateur et imprimé en PDF, sur imprimante thermique Bluetooth ou sur imprimante réseau Wi-Fi.
+Un reçu est créé dès qu’un paiement en espèces est enregistré. Pour les paiements enregistrés, vous pouvez télécharger un reçu PDF depuis votre navigateur et l’imprimer.
 
 <!-- CDC §4.2.9 -->
 ## Comment le QR code contrôle-t-il les entrées ?
 
-Un QR code unique est créé pour chaque abonné lors de la création de son profil et reste le même pour ses abonnements successifs. Après le scan, l’écran indique si l’accès est autorisé ou refusé, avec le motif du refus le cas échéant.
+Chaque abonné reçoit un QR code personnel qui reste valable pour ses abonnements suivants. Au scan, l’écran indique immédiatement si l’entrée est autorisée et précise la raison en cas de refus.
 
 <!-- CDC §4.2.7 -->
 ## AbidjanGym peut-il rappeler aux abonnés la fin de leur abonnement ?
 
-Le CDC prévoit des rappels à sept jours, trois jours et un jour de l’expiration, par WhatsApp et SMS. L’envoi WhatsApp nécessite un compte WhatsApp Business approuvé par Meta, et l’envoi de SMS nécessite un abonnement à une API SMS.
+AbidjanGym envoie des rappels par WhatsApp et SMS à sept jours, trois jours et un jour de l’expiration. Vos abonnés savent ainsi quand renouveler leur abonnement.
 
 <!-- CDC §4.2.10 -->
 ## Que peut faire un caissier dans AbidjanGym ?
 
-Un caissier peut consulter la liste des abonnés, créer un abonné, enregistrer un abonnement ou un paiement, imprimer un reçu et utiliser le scan QR code. Il ne peut pas accéder aux rapports ou aux paramètres de la salle, ni supprimer des données.
+Le caissier peut inscrire un abonné, enregistrer son abonnement ou son paiement, imprimer un reçu et scanner les QR codes. Les rapports, les paramètres de la salle et la suppression de données restent réservés à l’administrateur.
 
 <!-- CDC §6.3 -->
-## Les données de ma salle sont-elles isolées de celles des autres salles ?
+## Les données de ma salle sont-elles protégées ?
 
-Chaque salle possède un identifiant propre, et les routes de l’API vérifient l’appartenance à la salle avant toute lecture ou écriture. Le compte d’une salle ne peut pas accéder aux données d’une autre salle.
-
-<!-- CDC §4.1.5 et §4.2.10 -->
-## Que peut consulter un abonné dans son espace membre ?
-
-L’abonné peut consulter son profil, son abonnement actif et son historique. Il peut aussi voir ses paiements, télécharger ses reçus PDF et télécharger son QR code.
+Oui. Chaque salle dispose de son propre espace : aucune autre salle ne peut voir vos abonnés, vos paiements ni vos statistiques.
 
 <!-- CDC §4.2.9 -->
 ## Que faire si un abonné perd son QR code ?
 
-L’abonné peut télécharger son QR code depuis son espace membre. En cas de perte, un administrateur peut en générer un nouveau ; l’ancien code est alors invalidé.
+Un administrateur peut générer un nouveau QR code pour l’abonné. L’ancien code est alors invalidé.
