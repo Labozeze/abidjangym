@@ -30,10 +30,14 @@ Ton dossier de travail local : `C:\Users\HP\Documents\dev\abidjangym-front` (clo
 
 Le résultat du build (`.output/public`) est déployé tel quel sur Hostinger : **aucun serveur Node ne tourne en production**.
 
-## Design
-- Les maquettes de `demo/` sont la **référence visuelle** : `landing.html`, `contact.html`, `onboarding.html`. Respecte les couleurs (accent orange `#FF5A1E`, bleu marine `#0C1A2C`), la typographie, les espacements et le mode sombre.
-- Les photos sont dans `photos/`. Convertis-les en WebP redimensionné dans `frontend/` (ne modifie pas `photos/`).
-- Mobile d'abord, responsive jusqu'au bureau.
+## Design : reproduire, ne pas réinterpréter
+- **Les maquettes de `demo/` sont le design final validé par Rufin** (`landing.html`, `contact.html`, `onboarding.html`). Elles se **reproduisent à l'identique** : même structure, mêmes classes et styles (repris de la maquette, pas réécrits), **mêmes textes, mêmes photos, mêmes animations**, mode sombre compris.
+- Tu ne réécris pas les titres ni les textes, tu ne changes pas les photos et tu ne supprimes pas d'animation « pour simplifier ». La landing livrée en #36 a été refusée pour cette raison (voir #51).
+- **Seuls écarts autorisés :** ceux qu'imposent le ticket, le CDC ou une décision de Rufin (ex. 2 mois d'essai au lieu de 14 jours, aucun chiffre ni témoignage inventé #7, liens réels, accessibilité). **Chaque écart est listé dans la PR**, avec sa justification.
+- **Preuve obligatoire dans chaque PR d'écran :** captures côte à côte maquette / Nuxt, à 1280 px et à 375 px, section par section.
+- Les photos sont dans `photos/`. Convertis-les en WebP redimensionné dans `frontend/`, avec le **même cadrage** que la maquette (ne modifie pas `photos/`).
+- Animations : conserver celles de la maquette, et les désactiver uniquement si l'utilisateur a activé `prefers-reduced-motion`.
+- Mobile d'abord, responsive jusqu'au bureau, comme la maquette.
 
 ## Exigences SEO (CDC §5), obligatoires sur chaque page publique
 - `<html lang="fr">`, un seul `<h1>`, hiérarchie H1 > H2 > H3 sans saut
