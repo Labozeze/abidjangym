@@ -83,14 +83,39 @@ final class TenantIsolationTest extends TestCase
         ExampleRecord::create(['name' => 'orphelin']);
     }
 
-    public function test_writing_into_another_tenant_is_refused(): void
+    public function test_tenant_id_cannot_be_mass_assigned(): void
+    {
+        $record = $this->context->run(1, fn () => ExampleRecord::create([
+            'tenant_id' => 9,
+            'name' => 'Salle A',
+        ]));
+
+        $this->assertSame(
+            1,
+            $record->tenant_id,
+            'tenant_id doit être ignoré par l’assignation de masse et rempli par le contexte.'
+        );
+    }
+
+    public function test_creating_a_record_for_another_tenant_is_refused(): void
     {
         $this->expectException(TenantMismatchException::class);
 
-        $this->context->run(1, fn () => ExampleRecord::create([
-            'tenant_id' => 2,
-            'name' => 'intrus',
-        ]));
+        $this->context->run(1, function (): void {
+            $record = new ExampleRecord(['name' => 'intrus']);
+            $record->forceFill(['tenant_id' => 2])->save();
+        });
+    }
+
+    public function test_changing_tenant_on_update_is_refused(): void
+    {
+        $record = $this->context->run(1, fn () => ExampleRecord::create(['name' => 'Salle A']));
+
+        $this->expectException(TenantMismatchException::class);
+
+        $this->context->run(1, function () use ($record): void {
+            $record->forceFill(['tenant_id' => 2])->save();
+        });
     }
 
     public function test_maintenance_can_bypass_the_scope_explicitly(): void

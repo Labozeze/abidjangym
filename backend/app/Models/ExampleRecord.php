@@ -24,9 +24,13 @@ final class ExampleRecord extends Model
 
     protected $table = 'example_records';
 
-    /** @var list<string> */
+    /**
+     * `tenant_id` n'est volontairement pas assignable en masse : il est rempli par
+     * BelongsToTenant à la création, et son changement est refusé à la mise à jour.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
-        'tenant_id',
         'name',
     ];
 

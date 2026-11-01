@@ -23,4 +23,18 @@ final class TenantMismatchException extends RuntimeException
             $currentTenantId
         ));
     }
+
+    /**
+     * Le rattachement d'un enregistrement à une salle est immuable : seule une
+     * création peut le fixer, jamais une mise à jour.
+     */
+    public static function forUpdate(string $model, int $currentTenantId, int $targetTenantId): self
+    {
+        return new self(sprintf(
+            'Modification refusée pour %s : le rattachement à la salle est immuable (%d → %d).',
+            $model,
+            $currentTenantId,
+            $targetTenantId
+        ));
+    }
 }

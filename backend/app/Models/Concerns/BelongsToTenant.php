@@ -44,6 +44,24 @@ trait BelongsToTenant
                 throw TenantMismatchException::forModel($model::class, (int) $assigned, $context->id());
             }
         });
+
+        /*
+         * Le rattachement à une salle est immuable : une mise à jour ne doit jamais
+         * pouvoir déplacer une ligne vers une autre salle (CDC §6.3). Sans ce garde-fou,
+         * un `$model->update($request->validated())` mal filtré suffirait à exfiltrer
+         * une donnée d'un tenant vers un autre.
+         */
+        static::updating(function (Model $model): void {
+            if (! $model->isDirty('tenant_id')) {
+                return;
+            }
+
+            throw TenantMismatchException::forUpdate(
+                $model::class,
+                (int) $model->getOriginal('tenant_id'),
+                (int) $model->getAttribute('tenant_id'),
+            );
+        });
     }
 
     public function tenantId(): ?int

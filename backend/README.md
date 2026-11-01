@@ -90,8 +90,11 @@ Le trait apporte :
 2. **écriture sûre** — `tenant_id` est renseigné automatiquement à la création ;
 3. **refus par défaut** — sans salle courante, aucune ligne n'est renvoyée (jamais « toutes
    les salles » par accident) ;
-4. **garde-fou** — créer une ligne pour une autre salle que la salle courante lève
-   `TenantMismatchException`.
+4. **garde-fou à la création** — créer une ligne pour une autre salle que la salle courante
+   lève `TenantMismatchException` ;
+5. **rattachement immuable** — `tenant_id` n'est **pas** dans `$fillable` et son changement à
+   la mise à jour lève `TenantMismatchException`. Un `$model->update($request->validated())`
+   mal filtré ne peut donc pas déplacer une ligne d'une salle vers une autre (CDC §6.3).
 
 **Poser le contexte** (le middleware d'authentification le fera au ticket suivant) :
 
@@ -149,12 +152,17 @@ La suite tourne sur SQLite en mémoire (`phpunit.xml`), avec `BCRYPT_ROUNDS=4` e
 d'application de test. Aucune donnée réelle n'est utilisée : les numéros et emails des tests
 sont fictifs (`+225 07 00 00 00 01`, `test@example.com`).
 
+`composer install` crée un `.env` à partir de `.env.example` s'il n'en existe pas (script
+`post-install-cmd`). Ce fichier n'est pas indispensable aux tests, mais sans lui PHPUnit
+signale l'avertissement `file_get_contents(.env)` émis par phpdotenv : sur un clone propre,
+la suite apparaît alors en « warnings » au lieu de « passed ».
+
 Couverture actuelle :
 
 | Test | Ce qu'il prouve |
 |---|---|
 | `Tests\Feature\Api\V1\HealthTest` | `/api/v1/health` répond 200, expose la version, n'est pas cachable |
-| `Tests\Feature\Tenancy\TenantIsolationTest` | une salle ne voit ni ne modifie les données d'une autre ; sans contexte, aucune ligne ; contexte restauré après usage |
+| `Tests\Feature\Tenancy\TenantIsolationTest` | une salle ne voit ni ne modifie les données d'une autre ; sans contexte, aucune ligne ; `tenant_id` non assignable en masse et immuable ; contexte restauré après usage |
 
 ## 8. Reste à faire (tickets suivants)
 
