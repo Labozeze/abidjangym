@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Créer la PR si elle n'existe pas
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,8 +37,13 @@ jobs:
             *)           LABEL="" ;;
           esac
 
-          TITRE=$(git log -1 --format=%s)
-          git log -1 --format=%b > corps.md
+          # Dernier commit qui n'est pas une fusion : une entité peut avoir fusionné
+          # develop dans sa branche juste avant de pousser (AGENTS.md §3.5).
+          git fetch --quiet origin develop
+          LIVRAISON=$(git log -1 --no-merges --format=%H origin/develop..HEAD)
+          LIVRAISON=${LIVRAISON:-$(git log -1 --format=%H)}
+          TITRE=$(git log -1 --format=%s "$LIVRAISON")
+          git log -1 --format=%b "$LIVRAISON" > corps.md
           [ -s corps.md ] || echo "_Description manquante : voir le modèle de message de commit dans AGENTS.md._" > corps.md
           printf '\n\n---\n_PR ouverte automatiquement à partir de la branche `%s`._\n' "$BRANCH" >> corps.md
 
