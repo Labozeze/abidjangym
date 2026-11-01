@@ -29,10 +29,10 @@ Un smartphone ou une tablette avec caméra suffit pour scanner les QR codes des 
 
 Oui. Vous pouvez ajouter le logo de votre salle et choisir ses couleurs. Le logo et les couleurs peuvent apparaître sur les reçus.
 
-<!-- CDC §4.2.6 -->
+<!-- CDC §4.2.6 + décision de Rufin du 01/11/2026 (activation on/off) -->
 ## Quels moyens de paiement puis-je accepter ?
 
-Vous pouvez accepter les espèces, Orange Money, MTN Mobile Money, Wave, le virement et le chèque. Pour les cartes Visa et Mastercard, les paiements passent par CinetPay.
+Vous pouvez accepter les espèces, Orange Money, MTN Mobile Money, Wave, le virement et le chèque. Pour les cartes Visa et Mastercard, les paiements passent par CinetPay. Vous choisissez dans les paramètres de votre salle les moyens que vous acceptez. Chaque moyen s’active ou se désactive en un clic, et seuls ceux qui sont activés sont proposés lors de l’encaissement.
 
 <!-- CDC §4.2.6 et §4.2.8 -->
 ## Un reçu est-il fourni après un paiement ?
