@@ -1,8 +1,8 @@
-# Contrat d'API AbidjanGym — v0.1 (brouillon à valider par Rufin)
+# Contrat d'API AbidjanGym — v0.3
 #
 # Référence : livrables/cahier-des-charges.md (CDC) §4.2, §6.2, §6.3, §7.2, §10
-# Rédigé par : Entité B (DeepSeek) — ticket #9
-# Statut : v0.1 — aucune implémentation avant validation (CDC §2.5.4.b, point de contrôle 2)
+# Rédigé par : Entité B (DeepSeek) — tickets #9 (v0.1), #9 relecture (v0.2), #23 (v0.3)
+# Statut : v0.3 — aucune implémentation avant validation (CDC §2.5.4.b, point de contrôle 2)
 #
 # Convention : les valeurs machine (enum, noms de champs) sont en anglais snake_case ;
 # tous les messages destinés à l'utilisateur sont en français (AGENTS.md §5.7).
@@ -12,7 +12,7 @@ openapi: 3.0.3
 
 info:
   title: API AbidjanGym
-  version: 0.2.0
+  version: 0.3.0
   description: |
     API REST de la plateforme SaaS multi-tenant **AbidjanGym** (gestion de salles de sport,
     Côte d'Ivoire). Elle sert le backoffice gérant/caissier (`app.abidjangym.com`), l'espace
@@ -51,7 +51,12 @@ info:
     - reçu personnalisable configuré **par le gérant** dans les paramètres de la salle
       (QR code optionnel, signature ou cachet, message de pied de page) ;
     - chemin de callback du CDC §10.5 conservé (`/payments/callback/{provider}`), avec
-      `{paymentId}` contraint au format numérique côté routeur Laravel.
+      `{paymentId}` contraint au format numérique côté routeur Laravel ;
+    - **activation on/off des moyens de paiement** (CDC §4.2.6, ajout v2.2, ticket #23) :
+      le gérant active ou désactive chaque moyen dans les paramètres de la salle, seuls les
+      moyens activés sont proposés à l'encaissement, et un paiement avec un moyen désactivé
+      est refusé (`422`). À l'inscription, **seules les espèces sont activées** ; les autres
+      restent désactivés tant qu'ils ne sont pas configurés (confirmé par Rufin le 01/11/2026).
 
     ## Valeurs non disponibles
     Les identifiants réels des prestataires (Orange Money, MTN MoMo, Wave, CinetPay,
@@ -90,6 +95,8 @@ tags:
     description: Abonnements d'un membre, renouvellement et suspension.
   - name: Paiements
     description: Enregistrement comptable, reçus PDF et callbacks Mobile Money.
+  - name: Moyens de paiement
+    description: Activation, désactivation et configuration des moyens de paiement d'une salle (CDC §4.2.6).
   - name: Contrôle d'accès
     description: Scan du QR code et historique des entrées.
   - name: Tableau de bord
@@ -750,6 +757,109 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
+
+  # ---------------------------------------------------------------------------
+  # Moyens de paiement (activation on/off — CDC §4.2.6, ajout v2.2)
+  # ---------------------------------------------------------------------------
+  /gyms/current/payment-methods:
+    get:
+      operationId: listPaymentMethods
+      tags: [Moyens de paiement]
+      summary: Lister les moyens de paiement et leur état
+      description: |
+        Retourne les sept moyens de paiement du CDC §4.2.6 avec leur état d'activation et leur
+        configuration **non sensible**. Les identifiants secrets ne figurent jamais dans la
+        réponse (écriture seule, chiffrés AES-256, CDC §6.6).
+
+        À l'inscription d'une salle, seules les **espèces** sont activées ; les autres moyens
+        restent désactivés tant qu'ils ne sont pas configurés (décision de Rufin du 01/11/2026).
+
+        Accessible au gérant **et** au caissier : l'écran d'encaissement doit proposer uniquement
+        les moyens activés.
+      responses:
+        '200':
+          description: Les sept moyens de paiement, dans l'ordre du CDC §4.2.6.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    description: |
+                      Toujours sept entrées, une par moyen de paiement, y compris ceux qui sont
+                      désactivés et non configurés.
+                    items:
+                      $ref: '#/components/schemas/PaymentMethodSetting'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /gyms/current/payment-methods/{method}:
+    patch:
+      operationId: updatePaymentMethod
+      tags: [Moyens de paiement]
+      summary: Activer, désactiver ou configurer un moyen de paiement
+      description: |
+        **Réservé au gérant** : le caissier reçoit `403` (CDC §4.2.10).
+
+        Règles du CDC §4.2.6 :
+        - l'activation (`enabled: true`) est refusée en `422` si la configuration minimale du
+          moyen est absente — un moyen non configuré ne peut pas être proposé à l'encaissement ;
+        - la désactivation est toujours possible, même sur un moyen configuré ;
+        - les identifiants secrets passent par `credentials`, en **écriture seule** : chiffrés
+          en base (AES-256, CDC §6.6), jamais renvoyés par cette route ni par
+          `GET /gyms/current/payment-methods`.
+
+        Effet de bord : un moyen désactivé disparaît de l'écran d'encaissement et
+        `POST /payments` le refuse en `422`.
+      parameters:
+        - $ref: '#/components/parameters/PaymentMethod'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentMethodSettingsInput'
+      responses:
+        '200':
+          description: Réglage enregistré.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaymentMethodSetting'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Moyen de paiement inconnu.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                message: Moyen de paiement inconnu.
+        '422':
+          description: |
+            Données invalides, ou activation demandée sans la configuration minimale du moyen.
+            Le message est en français et indique ce qui manque.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              examples:
+                configuration-manquante:
+                  summary: Configuration absente
+                  value:
+                    message: Le moyen « orange_money » ne peut pas être activé tant que son numéro de collecte n’est pas renseigné.
+                    errors:
+                      collection_number:
+                        - Le numéro de collecte est obligatoire pour activer ce moyen.
 
   # ---------------------------------------------------------------------------
   # Plans d'abonnement
@@ -1741,6 +1851,11 @@ paths:
         - `bank_transfer`, `cheque` → `pending`, jusqu'à confirmation manuelle
           (`POST /payments/{paymentId}/confirm`) avec justificatif.
 
+        **Seuls les moyens activés** dans les paramètres de la salle sont acceptés (CDC §4.2.6) :
+        un `mode` désactivé est refusé en `422` avec un message en français. Le gérant active ou
+        désactive chaque moyen via `PATCH /gyms/current/payment-methods/{method}` ; à l'inscription
+        d'une salle, seules les espèces le sont.
+
         Le montant peut différer du prix du plan (remise manuelle, CDC §4.2.6).
         Un reçu est généré dès que le paiement est confirmé.
       requestBody:
@@ -1769,7 +1884,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiError'
         '422':
-          $ref: '#/components/responses/ValidationError'
+          description: |
+            Données invalides, **ou moyen de paiement désactivé** dans les paramètres de la salle
+            (CDC §4.2.6, activation on/off). Dans ce second cas, aucun paiement n'est enregistré et
+            le message indique le moyen concerné.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              examples:
+                moyen-desactive:
+                  summary: Moyen de paiement désactivé
+                  value:
+                    message: Ce moyen de paiement est désactivé pour cette salle. Activez-le dans les paramètres.
+                validation:
+                  summary: Données invalides
+                  value:
+                    message: Les données fournies sont invalides.
+                    errors:
+                      amount_xof:
+                        - Le montant doit être un entier positif.
 
   /payments/export:
     get:
@@ -2627,6 +2761,13 @@ components:
       schema:
         type: integer
         format: int64
+    PaymentMethod:
+      name: method
+      in: path
+      required: true
+      description: Moyen de paiement à régler (CDC §4.2.6).
+      schema:
+        $ref: '#/components/schemas/PaymentMode'
 
   responses:
     Unauthorized:
@@ -3600,7 +3741,11 @@ components:
           maximum: 100000000
           description: Peut différer du prix du plan (remise manuelle, CDC §4.2.6).
         mode:
-          $ref: '#/components/schemas/PaymentMode'
+          allOf:
+            - $ref: '#/components/schemas/PaymentMode'
+          description: |
+            Moyen de paiement utilisé. Doit être **activé** dans les paramètres de la salle
+            (`GET /gyms/current/payment-methods`) ; sinon la requête est refusée en `422`.
         paid_at:
           type: string
           format: date-time
@@ -3619,6 +3764,101 @@ components:
           type: string
           maxLength: 1000
           nullable: true
+
+    # --- Moyens de paiement (activation on/off, CDC §4.2.6) --------------------
+    PaymentMethodSetting:
+      type: object
+      description: |
+        État d'un moyen de paiement pour la salle courante (CDC §4.2.6, activation on/off).
+        Ne contient **aucun identifiant secret** : ceux-ci sont en écriture seule et chiffrés
+        en base (AES-256, CDC §6.6).
+      required: [method, enabled, is_configured]
+      properties:
+        method:
+          $ref: '#/components/schemas/PaymentMode'
+        enabled:
+          type: boolean
+          description: |
+            `true` = le moyen est proposé à l'encaissement. À l'inscription d'une salle, seules
+            les **espèces** sont activées (décision du 01/11/2026).
+        is_configured:
+          type: boolean
+          description: |
+            `true` si la configuration minimale du moyen est renseignée (numéro de collecte pour
+            le Mobile Money, titulaire et banque pour le virement et le chèque). Un moyen non
+            configuré ne peut pas être activé.
+        configuration:
+          $ref: '#/components/schemas/PaymentMethodConfiguration'
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PaymentMethodConfiguration:
+      type: object
+      description: |
+        Configuration **non sensible** d'un moyen de paiement, telle que renvoyée par l'API.
+        Les identifiants secrets (clé API, secret, identifiant marchand…) se saisissent via
+        `credentials` et ne figurent jamais ici.
+      properties:
+        collection_number:
+          type: string
+          nullable: true
+          description: Numéro de collecte Mobile Money de la salle (Orange Money, MTN MoMo, Wave).
+          example: '+2250700000001'
+        account_holder:
+          type: string
+          nullable: true
+          maxLength: 120
+          description: Titulaire du compte (virement, chèque).
+        bank_name:
+          type: string
+          nullable: true
+          maxLength: 120
+          description: Banque (virement, chèque).
+        instructions:
+          type: string
+          nullable: true
+          maxLength: 500
+          description: Instructions de paiement affichées à l'abonné.
+
+    PaymentMethodSettingsInput:
+      type: object
+      description: |
+        Réglage d'un moyen de paiement ; tous les champs sont facultatifs (mise à jour partielle).
+      properties:
+        enabled:
+          type: boolean
+          description: |
+            Active ou désactive le moyen. Une activation sans configuration minimale est refusée
+            en `422`.
+        collection_number:
+          type: string
+          nullable: true
+          description: Numéro de collecte Mobile Money de la salle.
+          example: '+2250700000001'
+        account_holder:
+          type: string
+          nullable: true
+          maxLength: 120
+        bank_name:
+          type: string
+          nullable: true
+          maxLength: 120
+        instructions:
+          type: string
+          nullable: true
+          maxLength: 500
+        credentials:
+          type: object
+          writeOnly: true
+          nullable: true
+          additionalProperties:
+            type: string
+          description: |
+            Identifiants secrets du prestataire (clé API, secret, identifiant marchand…).
+            **Écriture seule** : jamais renvoyés par l'API, chiffrés en base (AES-256, CDC §6.6).
+            Les clés attendues dépendent du prestataire et restent `[À FOURNIR]`.
 
     # --- Contrôle d'accès ------------------------------------------------------
     ScanMember:
