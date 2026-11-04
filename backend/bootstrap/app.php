@@ -44,4 +44,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(
             fn (AuthenticationFailedException $e) => response()->json(['message' => $e->getMessage()], 401)
         );
+
+        /*
+         * Un identifiant refusé est un cas normal, pas une erreur applicative : sans cela,
+         * chaque tentative ratée produirait une entrée ERROR avec une trace complète et
+         * noierait les vraies erreurs dans les logs.
+         */
+        $exceptions->dontReport([
+            AuthenticationFailedException::class,
+        ]);
     })->create();

@@ -167,6 +167,10 @@ et « Salle Témoin » — avec un gérant et un caissier chacune, et les sept m
 (espèces seules activées). Aucune donnée réelle : emails en `@example.com`, téléphones en
 `+225 07 00 00 00 XX` (docs/rapports/strategie-de-tests.md §5).
 
+Le seeder refuse de s'exécuter hors `local` et `testing` : les comptes de démonstration
+utilisent un mot de passe qui ne respecte pas la règle du CDC §6.2, ils n'ont donc rien à faire
+sur le staging ou en production.
+
 ## 6. Authentification (Sanctum, contrat v0.3.0)
 
 Six routes, conformes au contrat (`docs/api/openapi.yaml`, section Authentification) :
@@ -205,6 +209,13 @@ valider avec `Rule::unique('users', 'email')` (message générique, jamais le no
 `MAIL_MAILER=log` : le message est écrit dans `storage/logs/laravel.log`. Aucun mot de passe ni
 jeton n'est journalisé par l'application.
 
+**Lien de réinitialisation.** Il pointe vers la page du **backoffice**
+(`BACKOFFICE_URL` + `BACKOFFICE_RESET_PATH`), jamais vers une route de l'API : le backend n'a
+pas d'écran, et la notification standard de Laravel échouait en `500` faute de route
+`password.reset`. Le chemin de l'écran est `[À FOURNIR]` tant que le backoffice ne l'a pas
+livré. La réponse de `POST /auth/forgot-password` est `202` **dans tous les cas** — adresse
+inconnue ou échec d'envoi du message — pour ne jamais révéler quels comptes existent.
+
 ## 7. Configuration
 
 Tout passe par des variables d'environnement, documentées dans `.env.example` avec des valeurs
@@ -221,6 +232,8 @@ fictives. Toute nouvelle variable doit être ajoutée à ce fichier dans la mêm
 | `MAIL_*` | SMTP sortant |
 | `CORS_ALLOWED_ORIGINS` | sous-domaines autorisés du front, du backoffice et de l'espace abonné |
 | `API_VERSION` | version exposée par `/api/v1/health` |
+| `BACKOFFICE_URL` | URL publique du backoffice, base des liens de réinitialisation |
+| `BACKOFFICE_RESET_PATH` | chemin de l'écran de réinitialisation (`[À FOURNIR]` tant que l'écran n'existe pas) |
 
 Le fichier `.env` n'est jamais versionné ; seul `.env.example` (valeurs fictives) l'est.
 

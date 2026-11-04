@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use RuntimeException;
 use Tests\Concerns\CreatesGymUsers;
 use Tests\TestCase;
 
@@ -41,6 +42,55 @@ final class PasswordResetTest extends TestCase
             ->assertJsonPath('message', 'Si cette adresse existe, un lien de réinitialisation vous a été envoyé.');
 
         Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_the_reset_link_points_to_the_backoffice(): void
+    {
+        Notification::fake();
+
+        $user = $this->makeAdmin($this->makeGym(), ['email' => 'gerant@example.com']);
+
+        $this->postJson('/api/v1/auth/forgot-password', ['email' => 'gerant@example.com'])
+            ->assertStatus(202);
+
+        // Le lien est construit pour de vrai : la notification est rendue ici, sans
+        // simuler la construction de l'URL. C'est ce qui manquait pour détecter le 500
+        // « Route [password.reset] not defined » (relecture de la PR #62).
+        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user): bool {
+            $url = $notification->toMail($user)->actionUrl;
+
+            $this->assertIsString($url);
+            $this->assertStringStartsWith((string) config('backoffice.url'), $url);
+            $this->assertStringContainsString((string) config('backoffice.reset_path'), $url);
+            $this->assertStringContainsString($notification->token, $url);
+            $this->assertStringContainsString(urlencode($user->email), $url);
+
+            return true;
+        });
+    }
+
+    public function test_the_notification_is_actually_rendered_and_sent(): void
+    {
+        // Pas de Notification::fake ici : la notification est rendue puis remise au
+        // transport (mailer `array` en test). Une route web manquante provoquerait un 500.
+        $this->makeAdmin($this->makeGym(), ['email' => 'gerant@example.com']);
+
+        $this->postJson('/api/v1/auth/forgot-password', ['email' => 'gerant@example.com'])
+            ->assertStatus(202);
+
+        $this->assertDatabaseHas('password_reset_tokens', ['email' => 'gerant@example.com']);
+    }
+
+    public function test_it_still_returns_202_when_the_mail_transport_fails(): void
+    {
+        $this->makeAdmin($this->makeGym(), ['email' => 'gerant@example.com']);
+
+        Password::shouldReceive('sendResetLink')
+            ->andThrow(new RuntimeException('SMTP indisponible'));
+
+        $this->postJson('/api/v1/auth/forgot-password', ['email' => 'gerant@example.com'])
+            ->assertStatus(202)
+            ->assertJsonPath('message', 'Si cette adresse existe, un lien de réinitialisation vous a été envoyé.');
     }
 
     public function test_it_does_not_reveal_unknown_addresses(): void

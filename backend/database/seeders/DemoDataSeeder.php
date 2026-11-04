@@ -28,6 +28,21 @@ final class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
+        /*
+         * Garde-fou : ces comptes fictifs utilisent un mot de passe de démonstration
+         * (`password`), qui ne respecte pas la règle du CDC §6.2. Le seeder ne doit donc
+         * jamais s'exécuter ailleurs qu'en local ou en test — ni sur le staging, ni en
+         * production.
+         */
+        if (! app()->environment(['local', 'testing'])) {
+            $this->command?->warn(sprintf(
+                'DemoDataSeeder ignoré : environnement « %s », données de démonstration interdites.',
+                app()->environment()
+            ));
+
+            return;
+        }
+
         foreach ($this->gyms() as $definition) {
             $gym = Gym::query()->firstOrCreate(
                 ['name' => $definition['name']],
