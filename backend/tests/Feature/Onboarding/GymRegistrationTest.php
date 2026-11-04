@@ -156,11 +156,14 @@ final class GymRegistrationTest extends TestCase
     {
         Mail::fake();
 
-        for ($attempt = 1; $attempt <= 5; $attempt++) {
+        // Limiteur `onboarding` : 10 par minute (formulaire en quatre étapes).
+        for ($attempt = 1; $attempt <= 10; $attempt++) {
             $this->postJson('/api/v1/gyms', ['gym' => []])->assertStatus(422);
         }
 
-        $this->postJson('/api/v1/gyms', $this->payload())->assertStatus(429);
+        $this->postJson('/api/v1/gyms', $this->payload())
+            ->assertStatus(429)
+            ->assertJsonPath('message', 'Trop de tentatives. Réessayez dans une minute.');
     }
 
     /**

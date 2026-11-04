@@ -218,12 +218,23 @@ inconnue ou échec d'envoi du message — pour ne jamais révéler quels comptes
 
 ## 7. Routes publiques du site vitrine
 
-Deux routes, sans authentification, limitées à **5 requêtes par minute et par IP** :
+Deux routes, sans authentification, avec des limiteurs **nommés** — un compteur par route :
 
-| Méthode | Route | Effet |
-|---|---|---|
-| POST | `/api/v1/gyms` | inscription d'une salle : salle + gérant + formule + réglages de paiement |
-| POST | `/api/v1/contact-messages` | enregistrement du message puis email à l'équipe |
+| Méthode | Route | Limiteur | Effet |
+|---|---|---|---|
+| POST | `/api/v1/gyms` | `onboarding` (10/min/IP) | inscription d'une salle : salle + gérant + formule + réglages de paiement |
+| POST | `/api/v1/contact-messages` | `contact` (5/min/IP) | enregistrement du message puis email à l'équipe |
+
+Les autres limiteurs, définis dans `AppServiceProvider` : `login` (5/min), `password`
+(5/min, mot de passe oublié et réinitialisation), `refresh` (30/min), `magic-link`
+(5/min, routes de l'espace abonné à venir). Chaque route a **son propre compteur** : épuiser le
+formulaire de contact ne bloque plus la connexion du gérant sur une IP partagée.
+
+Toute réponse `429` respecte le format du contrat, en français, avec l'en-tête `Retry-After` :
+
+```json
+{ "message": "Trop de tentatives. Réessayez dans une minute.", "errors": {} }
+```
 
 **Onboarding (`POST /gyms`).** Tout est écrit dans **une transaction** : salle, compte gérant
 (`admin`) et les sept réglages de moyens de paiement, dont **seules les espèces sont activées**

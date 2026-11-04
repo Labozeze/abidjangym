@@ -31,39 +31,39 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     /*
      * Routes publiques du site vitrine (CDC §10.1, §4.1.2).
      *
-     * 5 tentatives par minute et par IP : l'inscription et le formulaire de contact sont
-     * accessibles sans authentification et écrivent en base.
+     * Limiteurs **nommés** : chaque route a son propre compteur, sinon quelques essais du
+     * formulaire de contact bloqueraient la connexion sur une IP partagée (PR #64).
      */
     Route::post('gyms', GymController::class)
-        ->middleware('throttle:5,1')
+        ->middleware('throttle:onboarding')
         ->name('gyms.store');
 
     Route::post('contact-messages', ContactMessageController::class)
-        ->middleware('throttle:5,1')
+        ->middleware('throttle:contact')
         ->name('contact-messages.store');
 
     /*
      * Routes publiques d'authentification.
      *
      * 5 tentatives par minute et par IP sur les surfaces de devinette (CDC §6.2, §6.4).
-     * Le rafraîchissement est limité plus largement : ce n'est pas une surface de devinette,
-     * et un bureau partageant une IP publique ne doit pas se bloquer lui-même.
+     * Le rafraîchissement a son propre limiteur, plus large : ce n'est pas une surface de
+     * devinette, et un bureau partageant une IP publique ne doit pas se bloquer lui-même.
      */
     Route::prefix('auth')->name('auth.')->group(function (): void {
         Route::post('login', LoginController::class)
-            ->middleware('throttle:5,1')
+            ->middleware('throttle:login')
             ->name('login');
 
         Route::post('refresh', RefreshController::class)
-            ->middleware('throttle:30,1')
+            ->middleware('throttle:refresh')
             ->name('refresh');
 
         Route::post('forgot-password', ForgotPasswordController::class)
-            ->middleware('throttle:5,1')
+            ->middleware('throttle:password')
             ->name('password.email');
 
         Route::post('reset-password', ResetPasswordController::class)
-            ->middleware('throttle:5,1')
+            ->middleware('throttle:password')
             ->name('password.store');
     });
 

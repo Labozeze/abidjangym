@@ -11,11 +11,11 @@ return [
     |
     | Destinataire des messages du formulaire public (CDC §4.1.2).
     |
-    | [À FOURNIR] : adresse réelle à confirmer par Rufin. La valeur ci-dessous est
-    | un emplacement, jamais utilisée en production tant qu'elle n'est pas remplacée.
+    | Adresse officielle confirmée par Rufin le 02/11/2026. Elle se surcharge dans le
+    | `.env` du serveur (`CONTACT_EMAIL`) ; la valeur ci-dessous n'est qu'un repli.
     |
     */
 
-    'email' => env('CONTACT_EMAIL', 'contact@example.com'),
+    'email' => env('CONTACT_EMAIL', 'contact@abidjangym.com'),
 
 ];
