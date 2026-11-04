@@ -167,7 +167,56 @@ et « Salle Témoin » — avec un gérant et un caissier chacune, et les sept m
 (espèces seules activées). Aucune donnée réelle : emails en `@example.com`, téléphones en
 `+225 07 00 00 00 XX` (docs/rapports/strategie-de-tests.md §5).
 
-## 6. Configuration
+Le seeder refuse de s'exécuter hors `local` et `testing` : les comptes de démonstration
+utilisent un mot de passe qui ne respecte pas la règle du CDC §6.2, ils n'ont donc rien à faire
+sur le staging ou en production.
+
+## 6. Authentification (Sanctum, contrat v0.3.0)
+
+Six routes, conformes au contrat (`docs/api/openapi.yaml`, section Authentification) :
+
+| Méthode | Route | Accès |
+|---|---|---|
+| POST | `/api/v1/auth/login` | public, 5 req/min par IP |
+| POST | `/api/v1/auth/refresh` | public, 30 req/min par IP |
+| POST | `/api/v1/auth/forgot-password` | public, 5 req/min par IP |
+| POST | `/api/v1/auth/reset-password` | public, 5 req/min par IP |
+| POST | `/api/v1/auth/logout` | authentifié |
+| GET | `/api/v1/auth/me` | authentifié |
+
+**Deux modes d'authentification, un seul compte.** La connexion renvoie un jeton Bearer
+(`access_token`) pour l'API, et pose deux cookies `httpOnly` pour le backoffice :
+`ag_session` (jeton d'accès, 1 h) et `ag_refresh` (rafraîchissement). Le middleware
+`AcceptSessionCookie` traduit le cookie en en-tête `Authorization`, l'en-tête explicite restant
+prioritaire.
+
+**Politique de session** (décision de Rufin, PR #20) : jeton d'accès **1 h** ; rafraîchissement
+tant qu'il y a de l'activité, session **plafonnée à 8 h** ; option « se souvenir de cet
+appareil » → plafond porté à **30 jours**. Les jetons de rafraîchissement sont à usage unique
+(rotation) et la déconnexion révoque la session entière.
+
+**Mot de passe** : bcrypt, coût 12 en production (`BCRYPT_ROUNDS`), 8 caractères minimum avec
+une majuscule et un chiffre ; un utilisateur désactivé (`is_active = false`) ne peut pas se
+connecter. La réinitialisation envoie un lien valable **1 h**, et révoque toutes les sessions
+du compte.
+
+**Email unique sur toute la plateforme** (décision de Rufin du 01/11/2026) : la connexion et la
+réinitialisation retrouvent le compte par le seul email. La contrainte est portée par une
+migration dédiée (`2026_11_01_000012_…`), et les futurs `POST /users` et `POST /gyms` doivent
+valider avec `Rule::unique('users', 'email')` (message générique, jamais le nom de la salle).
+
+**Emails en développement.** Pour consulter un lien de réinitialisation sans SMTP, utiliser
+`MAIL_MAILER=log` : le message est écrit dans `storage/logs/laravel.log`. Aucun mot de passe ni
+jeton n'est journalisé par l'application.
+
+**Lien de réinitialisation.** Il pointe vers la page du **backoffice**
+(`BACKOFFICE_URL` + `BACKOFFICE_RESET_PATH`), jamais vers une route de l'API : le backend n'a
+pas d'écran, et la notification standard de Laravel échouait en `500` faute de route
+`password.reset`. Le chemin de l'écran est `[À FOURNIR]` tant que le backoffice ne l'a pas
+livré. La réponse de `POST /auth/forgot-password` est `202` **dans tous les cas** — adresse
+inconnue ou échec d'envoi du message — pour ne jamais révéler quels comptes existent.
+
+## 7. Configuration
 
 Tout passe par des variables d'environnement, documentées dans `.env.example` avec des valeurs
 fictives. Toute nouvelle variable doit être ajoutée à ce fichier dans la même PR
@@ -183,10 +232,12 @@ fictives. Toute nouvelle variable doit être ajoutée à ce fichier dans la mêm
 | `MAIL_*` | SMTP sortant |
 | `CORS_ALLOWED_ORIGINS` | sous-domaines autorisés du front, du backoffice et de l'espace abonné |
 | `API_VERSION` | version exposée par `/api/v1/health` |
+| `BACKOFFICE_URL` | URL publique du backoffice, base des liens de réinitialisation |
+| `BACKOFFICE_RESET_PATH` | chemin de l'écran de réinitialisation (`[À FOURNIR]` tant que l'écran n'existe pas) |
 
 Le fichier `.env` n'est jamais versionné ; seul `.env.example` (valeurs fictives) l'est.
 
-## 7. Tests
+## 8. Tests
 
 ```bash
 php artisan test
@@ -206,15 +257,19 @@ Couverture actuelle :
 | Test | Ce qu'il prouve |
 |---|---|
 | `Tests\Feature\Api\V1\HealthTest` | `/api/v1/health` répond 200, expose la version, n'est pas cachable |
-| `Tests\Feature\Tenancy\TenantIsolationTest` | une salle ne voit ni ne modifie les données d'une autre ; sans contexte, aucune ligne ; `tenant_id` non assignable en masse et immuable ; contexte restauré après usage |
+| `Tests\Feature\Tenancy\TenantIsolationTest` | une salle ne voit ni ne modifie les données d'une autre ; sans contexte, aucune ligne ; `tenant_id` non assignable en masse et immuable ; email unique plateforme ; contexte restauré après usage |
+| `Tests\Feature\Auth\LoginTest` | connexion OK (jetons + cookies `httpOnly`), cookies et Bearer utilisables, mauvais mot de passe, compte désactivé, email insensible à la casse, coût bcrypt |
+| `Tests\Feature\Auth\RefreshTest` | rotation du jeton de rafraîchissement, plafond de 8 h, extension « se souvenir », jeton d'accès expiré refusé |
+| `Tests\Feature\Auth\LogoutTest` | révocation de la session et expiration des cookies |
+| `Tests\Feature\Auth\MeTest` | `GET /auth/me` : utilisateur, rôle, `gym_id`, jamais `password` ni `tenant_id` |
+| `Tests\Feature\Auth\PasswordResetTest` | lien valable, mot de passe faible refusé, jeton invalide refusé, sessions révoquées |
+| `Tests\Feature\Auth\RateLimitTest` | `429` après 5 tentatives (connexion, mot de passe oublié) |
 
-## 8. Reste à faire (tickets suivants)
+## 9. Reste à faire (tickets suivants)
 
-- authentification Sanctum (cookie httpOnly pour le backoffice, Bearer pour l'API) et rôles
-  `admin` / `cashier` ;
-- middleware posant le `TenantContext` à partir du jeton authentifié ;
-- modèles et migrations métier (`gyms`, `members`, `plans`, `subscriptions`, `payments`) ;
-- implémentation des 66 opérations du contrat `docs/api/openapi.yaml`.
+- `POST /users` et `POST /gyms` : validation de l'email unique (règle prête, voir §6) ;
+- modèles et migrations métier (`members`, `plans`, `subscriptions`, `payments`) ;
+- implémentation des 68 opérations du contrat `docs/api/openapi.yaml`.
 
 Valeurs en attente `[À FOURNIR]` : SMTP réel, identifiants Orange Money / MTN MoMo / Wave /
 CinetPay, fournisseurs WhatsApp et SMS, URL des callbacks.
