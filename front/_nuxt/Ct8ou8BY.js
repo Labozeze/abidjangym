@@ -1,0 +1,1 @@
+import{_ as s,A as t,B as o,O as c}from"./CVhH7h8S.js";const r={},a={class:"site-shell"};function n(e,l){return t(),o("div",a,[c(e.$slots,"default")])}const d=s(r,[["render",n]]);export{d as default};
