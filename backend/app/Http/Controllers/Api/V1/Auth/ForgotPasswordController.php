@@ -23,22 +23,30 @@ final class ForgotPasswordController extends Controller
 {
     public function __invoke(ForgotPasswordRequest $request): JsonResponse
     {
-        try {
-            // L'email est unique sur toute la plateforme ; la recherche se fait hors du
-            // scope multi-tenant, puis le contexte est posé pour que le broker retrouve
-            // le compte.
-            $user = User::withoutTenantScope()->where('email', $request->email())->first();
+        // L'email est unique sur toute la plateforme : la recherche se fait hors du scope
+        // multi-tenant, rapidement, et ne dépend pas de l'existence d'un compte.
+        $user = User::withoutTenantScope()->where('email', $request->email())->first();
 
-            if ($user !== null) {
-                app(TenantContext::class)->run(
-                    $user->tenant_id,
-                    fn () => Password::sendResetLink(['email' => $request->email()])
-                );
-            }
-        } catch (Throwable $exception) {
-            // Échec d'envoi : journalisé côté serveur (handler d'exceptions), jamais
-            // exposé au client. La réponse reste identique aux autres cas.
-            report($exception);
+        if ($user !== null) {
+            /*
+             * Envoi **différé** : la réponse ne doit pas dépendre du SMTP. Sans cela, le
+             * temps de réponse — et non plus le code — révèle quels comptes existent
+             * (1,9 s contre 0,15 s relevé en relecture de la PR #62).
+             *
+             * Le contexte multi-tenant est reposé ici : au moment où le callback
+             * s'exécute, la requête est terminée et le contexte a été vidé.
+             */
+            defer(function () use ($user): void {
+                try {
+                    app(TenantContext::class)->run(
+                        $user->tenant_id,
+                        fn () => Password::sendResetLink(['email' => $user->email])
+                    );
+                } catch (Throwable $exception) {
+                    // Échec d'envoi : journalisé côté serveur, jamais exposé au client.
+                    report($exception);
+                }
+            });
         }
 
         return response()->json([

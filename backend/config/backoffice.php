@@ -23,4 +23,10 @@ return [
 
     'reset_path' => env('BACKOFFICE_RESET_PATH', '/reset-password'),
 
+    /*
+    | Tableau de bord du gérant, envoyé dans l'email de confirmation d'inscription
+    | (CDC §10.1). Chemin interne au backoffice, lui aussi à confirmer par l'Entité A.
+    */
+    'dashboard_path' => env('BACKOFFICE_DASHBOARD_PATH', '/dashboard'),
+
 ];

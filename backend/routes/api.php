@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\MeController;
 use App\Http\Controllers\Api\V1\Auth\RefreshController;
 use App\Http\Controllers\Api\V1\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\V1\ContactMessageController;
+use App\Http\Controllers\Api\V1\GymController;
 use App\Http\Controllers\Api\V1\HealthController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +27,20 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
     // Supervision : public, ne dépend d'aucune session (backend/AGENTS.md §7).
     Route::get('health', HealthController::class)->name('health');
+
+    /*
+     * Routes publiques du site vitrine (CDC §10.1, §4.1.2).
+     *
+     * 5 tentatives par minute et par IP : l'inscription et le formulaire de contact sont
+     * accessibles sans authentification et écrivent en base.
+     */
+    Route::post('gyms', GymController::class)
+        ->middleware('throttle:5,1')
+        ->name('gyms.store');
+
+    Route::post('contact-messages', ContactMessageController::class)
+        ->middleware('throttle:5,1')
+        ->name('contact-messages.store');
 
     /*
      * Routes publiques d'authentification.
