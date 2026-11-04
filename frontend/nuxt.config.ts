@@ -4,6 +4,7 @@ export default defineNuxtConfig({
     "~/assets/css/main.css",
     "~/assets/css/public-pages.css",
     "~/assets/css/contact.css",
+    "~/assets/css/onboarding.css",
   ],
   typescript: {
     strict: true,
@@ -40,7 +41,7 @@ export default defineNuxtConfig({
   },
   nitro: {
     prerender: {
-      routes: ["/", "/tarifs", "/contact"],
+      routes: ["/", "/tarifs", "/contact", "/inscription"],
       crawlLinks: false,
     },
   },

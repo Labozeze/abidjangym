@@ -1,0 +1,570 @@
+.onboarding-page {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --fg: #0f172a;
+  --fg-2: #475569;
+  --fg-3: #94a3b8;
+  --accent: #ff5a1e;
+  --accent-h: #e84a10;
+  --accent-soft: rgba(255, 90, 30, 0.1);
+  --ok: #16a34a;
+  --ok-bg: rgba(22, 163, 74, 0.1);
+  --bad: #dc2626;
+  --fd: "Plus Jakarta Sans", sans-serif;
+  --fb: "DM Sans", sans-serif;
+  --r: 10px;
+  --r-lg: 16px;
+  color-scheme: only light;
+}
+.onboarding-page *,
+.onboarding-page *::before,
+.onboarding-page *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.onboarding-page {
+  font-family: var(--fb);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
+  color-scheme: only light;
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────── */
+.onboarding-page .ob-layout {
+  display: flex;
+  flex: 1;
+  min-height: 100vh;
+}
+.onboarding-page .ob-left {
+  width: 420px;
+  flex-shrink: 0;
+  background: #0c1a2c url("/images/onboarding-receptionist.webp") center/cover
+    no-repeat;
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.onboarding-page .ob-left::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(12, 26, 44, 0.9) 0%,
+    rgba(12, 26, 44, 0.7) 55%,
+    rgba(12, 26, 44, 0.88) 100%
+  );
+}
+.onboarding-page .ob-left > * {
+  position: relative;
+  z-index: 1;
+}
+.onboarding-page .ob-right {
+  flex: 1;
+  padding: 40px max(40px, env(safe-area-inset-right, 0px)) 60px 48px;
+  overflow-y: auto;
+}
+
+/* ── LEFT PANEL ──────────────────────────────────────────────────── */
+.onboarding-page .brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 48px;
+  text-decoration: none;
+}
+.onboarding-page .logo-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+}
+.onboarding-page .logo-name {
+  font-family: var(--fd);
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+}
+.onboarding-page .logo-name span {
+  color: var(--accent);
+}
+.onboarding-page .ob-headline {
+  font-family: var(--fd);
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin-bottom: 16px;
+}
+.onboarding-page .ob-sub {
+  font-size: 14px;
+  color: #8a9bb8;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+.onboarding-page .perk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.onboarding-page .perk {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.onboarding-page .perk-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.onboarding-page .perk-text strong {
+  display: block;
+  font-family: var(--fd);
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 2px;
+}
+.onboarding-page .perk-text span {
+  font-size: 12px;
+  color: #8a9bb8;
+}
+.onboarding-page .ob-bottom {
+  margin-top: auto;
+  padding-top: 32px;
+  font-size: 12px;
+  color: #4a6080;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── STEPS ───────────────────────────────────────────────────────── */
+.onboarding-page .steps {
+  display: flex;
+  gap: 0;
+  margin-bottom: 40px;
+  align-items: center;
+}
+.onboarding-page .step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.onboarding-page .step-item:last-child {
+  flex: none;
+}
+.onboarding-page .step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--fd);
+  font-size: 12px;
+  font-weight: 800;
+  transition: all 0.2s;
+}
+.onboarding-page .step-dot.done {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.onboarding-page .step-dot.active {
+  background: var(--accent);
+  color: white;
+}
+.onboarding-page .step-dot.pending {
+  background: var(--border);
+  color: var(--fg-3);
+}
+.onboarding-page .step-label {
+  font-family: var(--fd);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.onboarding-page .step-label.active {
+  color: var(--fg);
+}
+.onboarding-page .step-label.done {
+  color: var(--ok);
+}
+.onboarding-page .step-label.pending {
+  color: var(--fg-3);
+}
+.onboarding-page .step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 8px;
+  transition: background 0.3s;
+}
+.onboarding-page .step-line.done {
+  background: var(--ok);
+}
+
+/* ── FORM ────────────────────────────────────────────────────────── */
+.onboarding-page .form-section {
+  max-width: 560px;
+}
+.onboarding-page .form-title {
+  font-family: var(--fd);
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+.onboarding-page .form-subtitle {
+  font-size: 14px;
+  color: var(--fg-2);
+  margin-bottom: 32px;
+}
+.onboarding-page .field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.onboarding-page .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.onboarding-page .field label {
+  font-family: var(--fd);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+.onboarding-page .field label span {
+  color: var(--bad);
+}
+.onboarding-page .inp {
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--fb);
+  font-size: 14px;
+  color: var(--fg);
+  transition: border-color 0.15s;
+  outline: none;
+  width: 100%;
+}
+.onboarding-page .inp:focus {
+  border-color: var(--accent);
+}
+.onboarding-page .inp::placeholder {
+  color: var(--fg-3);
+}
+.onboarding-page select.inp {
+  cursor: pointer;
+}
+.onboarding-page .inp-prefix-wrap {
+  position: relative;
+}
+.onboarding-page .inp-prefix {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--fg-3);
+  pointer-events: none;
+}
+.onboarding-page .inp-prefix-wrap .inp {
+  padding-left: 68px;
+}
+.onboarding-page .field-hint {
+  font-size: 11px;
+  color: var(--fg-3);
+  margin-top: 4px;
+}
+
+/* ── PLAN SELECTOR ───────────────────────────────────────────────── */
+.onboarding-page .plan-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.onboarding-page .plan-opt {
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  background: var(--surface);
+}
+.onboarding-page .plan-opt:hover {
+  border-color: var(--accent);
+}
+.onboarding-page .plan-opt.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.onboarding-page .plan-opt-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.onboarding-page .plan-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  transition: all 0.15s;
+}
+.onboarding-page .plan-opt.selected .plan-check {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.onboarding-page .plan-opt-name {
+  font-family: var(--fd);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.onboarding-page .plan-opt-price {
+  font-family: var(--fd);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--accent);
+}
+.onboarding-page .plan-opt-price sub {
+  font-size: 10px;
+  font-weight: 600;
+}
+.onboarding-page .plan-opt.selected .plan-opt-price {
+  color: var(--accent);
+}
+.onboarding-page .plan-opt-features {
+  font-size: 11px;
+  color: var(--fg-3);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────── */
+.onboarding-page .form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.onboarding-page .btn-back {
+  padding: 11px 22px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--fd);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-2);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.onboarding-page .btn-back:hover {
+  border-color: var(--fg-3);
+}
+.onboarding-page .btn-next {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--fd);
+  font-size: 15px;
+  font-weight: 800;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s;
+  box-shadow: 0 4px 16px rgba(255, 90, 30, 0.3);
+}
+.onboarding-page .btn-next:hover {
+  background: var(--accent-h);
+}
+
+/* ── STEP PANELS ─────────────────────────────────────────────────── */
+.onboarding-page .step-panel {
+  display: none;
+}
+.onboarding-page .step-panel.active {
+  display: block;
+}
+
+/* ── SUCCESS ─────────────────────────────────────────────────────── */
+.onboarding-page .success-wrap {
+  display: none;
+  text-align: center;
+  padding: 40px 0;
+}
+.onboarding-page .success-wrap.active {
+  display: block;
+}
+.onboarding-page .success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--ok-bg);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+  color: var(--ok);
+}
+.onboarding-page .success-title {
+  font-family: var(--fd);
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+.onboarding-page .success-sub {
+  font-size: 15px;
+  color: var(--fg-2);
+  max-width: 380px;
+  margin: 0 auto 32px;
+}
+.onboarding-page .success-info {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+.onboarding-page .si-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.onboarding-page .si-row:last-child {
+  border-bottom: none;
+}
+.onboarding-page .si-label {
+  color: var(--fg-3);
+}
+.onboarding-page .si-value {
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .onboarding-page .ob-left {
+    display: none;
+  }
+  .onboarding-page .ob-right {
+    padding: 32px max(20px, env(safe-area-inset-right, 0px)) 60px 20px;
+  }
+  .onboarding-page .field-row {
+    grid-template-columns: 1fr;
+  }
+  .onboarding-page .plan-cards {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .onboarding-page .steps {
+    gap: 2px;
+  }
+  .onboarding-page .step-label {
+    display: none;
+  }
+  .onboarding-page .step-line {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-page *,
+  .onboarding-page *::before,
+  .onboarding-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.onboarding-page [hidden] {
+  display: none !important;
+}
+.onboarding-page .form-alert:not([hidden]) {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.06);
+  color: var(--bad);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.onboarding-page .inp[aria-invalid="true"] {
+  border-color: var(--bad);
+}
+.onboarding-page .plan-opt:focus-within {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.onboarding-page .plan-opt-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.onboarding-page .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
