@@ -24,9 +24,9 @@ const menuOpen = ref(false);
         :aria-label="menuOpen ? 'Masquer le menu' : 'Afficher le menu'"
         @click="menuOpen = !menuOpen"
       >
-        <span></span>
-        <span></span>
-        <span></span>
+        <span />
+        <span />
+        <span />
       </button>
 
       <nav

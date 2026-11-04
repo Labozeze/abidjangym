@@ -571,9 +571,13 @@
   opacity: 0.7;
   transform: none;
 }
-.contact-page .contact-placeholder {
-  color: var(--fg-3);
-  cursor: default;
+.contact-page .contact-whatsapp-disabled {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  opacity: 1;
+  cursor: not-allowed;
 }
 .contact-page .form-success:focus {
   outline: 3px solid var(--accent);

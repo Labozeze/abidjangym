@@ -172,8 +172,6 @@ async function handleSubmit(event: SubmitEvent) {
     form.hidden = true;
     const success =
       form.parentElement?.querySelector<HTMLElement>(".form-success");
-    const successMessage = success?.querySelector<HTMLElement>(".success-sub");
-    if (successMessage) successMessage.textContent = result.message;
     success?.classList.add("active");
     success?.focus();
     return;

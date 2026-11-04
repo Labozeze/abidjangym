@@ -140,7 +140,7 @@ onBeforeUnmount(() => observer?.disconnect());
         <div class="page-hero-inner">
           <div class="eyebrow reveal">Tarifs</div>
           <h1 class="page-title reveal">
-            Nos formules<br /><em>pour votre salle</em>
+            Nos formules<em class="page-title-second-line">pour votre salle</em>
           </h1>
           <p class="page-sub reveal">
             2 mois d’essai gratuit sur les formules payantes, sans carte
