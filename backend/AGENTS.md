@@ -35,7 +35,7 @@ Ton dossier de travail local : `C:\Users\HP\Documents\deepseek-harness\default-w
 3. **Le contrat d'abord.** `docs/api/openapi.yaml` (OpenAPI 3.0) est rédigé **avant** l'implémentation et validé par Rufin. Ensuite, le code respecte le contrat. La CI vérifiera la conformité (tests de contrat de Valère).
 4. **Sécurité (CDC §6) :** mots de passe hachés en bcrypt (cost ≥ 12), limitation des tentatives de connexion (5 par minute et par IP), CSRF, validation de toutes les entrées, identifiants d'API des salles chiffrés en base (AES-256), journal d'audit des actions sensibles, aucun mot de passe ni jeton dans les logs.
 5. **Configuration :** tout passe par des variables d'environnement documentées dans `backend/.env.example` (valeurs fictives). Ajoute toute nouvelle variable à ce fichier dans la même PR.
-6. **Migrations réversibles** (méthode `down` implémentée).
+6. **Migrations réversibles** (méthode `down` implémentée). **Une migration déjà mergée ne se modifie, ne se renomme et ne se supprime jamais** : elle a pu être exécutée sur le staging. Toute évolution passe par une **nouvelle** migration. La CI bloque la PR dans le cas contraire.
 7. **Endpoint de santé** `GET /api/v1/health` (utilisé par le déploiement et le monitoring).
 8. **Déploiement :** la CI installe `vendor/` et Hostinger exécute `php artisan migrate --force`. Le code ne doit donc dépendre d'aucune commande manuelle sur le serveur. La racine web est `backend/public/`.
 

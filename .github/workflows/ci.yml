@@ -120,6 +120,19 @@ jobs:
         with:
           path: ~/.cache/composer/files
           key: composer-${{ hashFiles('backend/composer.lock') }}
+      - name: Migrations déjà livrées intactes
+        if: steps.diff.outputs.change == 'true'
+        working-directory: .
+        env:
+          BASE: ${{ github.base_ref || 'develop' }}
+        run: |
+          git fetch --quiet origin "$BASE"
+          TOUCHEES=$(git diff --name-only --diff-filter=DRMC -M "origin/$BASE...HEAD" -- backend/database/migrations)
+          if [ -n "$TOUCHEES" ]; then
+            echo "::error::Une migration déjà livrée ne se modifie, ne se renomme et ne se supprime jamais (elle a pu être exécutée sur le staging). Ajouter une nouvelle migration."
+            echo "$TOUCHEES" | sed 's/^/  - /'
+            exit 1
+          fi
       - name: composer.lock synchronisé
         if: steps.diff.outputs.change == 'true'
         run: composer validate --no-check-publish
