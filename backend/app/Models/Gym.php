@@ -32,6 +32,7 @@ final class Gym extends Model
     /** @var list<string> */
     protected $fillable = [
         'name',
+        'plan_code',
         'logo_url',
         'tagline',
         'address',

@@ -6,6 +6,7 @@ use App\Http\Middleware\ResolveTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -44,6 +45,24 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(
             fn (AuthenticationFailedException $e) => response()->json(['message' => $e->getMessage()], 401)
         );
+
+        /*
+         * Limitation de débit : le message par défaut de Laravel est en anglais et hors
+         * format du contrat. On renvoie le format commun, en français, en conservant les
+         * en-têtes `Retry-After` et `X-RateLimit-*` (relecture de la PR #64).
+         */
+        $exceptions->render(function (ThrottleRequestsException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()
+                ->json([
+                    'message' => 'Trop de tentatives. Réessayez dans une minute.',
+                    'errors' => (object) [],
+                ], 429)
+                ->withHeaders($exception->getHeaders());
+        });
 
         /*
          * Un identifiant refusé est un cas normal, pas une erreur applicative : sans cela,
