@@ -4,7 +4,7 @@
 **Client :** Rufin Ismael Baroan — Le Labo de Zézé  
 **Domaine :** https://abidjangym.com/  
 **Date :** Octobre 2026  
-**Version :** 2.4  
+**Version :** 2.5  
 **Statut :** Document de référence — toutes les entités doivent s'y conformer
 
 ---
@@ -45,7 +45,7 @@ AbidjanGym est une plateforme SaaS multi-tenant destinée aux gérants de salles
 
 | Formule | Prix | Inclus |
 |---|---|---|
-| **Starter** | Gratuit | Jusqu'à 50 abonnés · QR code d'accès · Paiements Mobile Money · Notifications WhatsApp · Rapports avancés |
+| **Starter** | Gratuit | Jusqu'à 50 abonnés · QR code d'accès · Paiements Mobile Money. **Non inclus :** notifications WhatsApp, rapports avancés |
 | **Essentiel** | 15 000 FCFA/mois, sans engagement | Abonnés illimités · QR code + domotique · Mobile Money · Notifications WhatsApp et SMS · Rapports + export PDF/CSV |
 | **Pro** | 35 000 FCFA/mois | Tout l'Essentiel · Multi-salles (5 maximum) · API et intégrations · Support prioritaire WhatsApp · Formation incluse (2 h) |
 - Évolution future : commission sur les paiements en ligne traités via la plateforme
@@ -687,7 +687,7 @@ Actions requises :
 | CSRF | Token CSRF sur tous les formulaires POST/PUT/DELETE. Validation côté serveur. |
 | Clickjacking | Header `X-Frame-Options: DENY` sur toutes les réponses. |
 | Injection de headers | Validation et sanitisation de toutes les entrées utilisateur (nom, email, téléphone, etc.). |
-| Brute force | Rate limiting sur les routes d'authentification (5 req/min par IP). |
+| Brute force | Rate limiting sur les routes d'authentification (5 req/min par IP), avec un compteur séparé par route. Rafraîchissement du jeton : 30 req/min. Inscription d'une salle : 10 req/min. Formulaire de contact : 5 req/min. *(précisé en v2.5)* |
 | Exposition de fichiers | Le dossier `storage/` est hors du webroot Hostinger. Le `.env` n'est jamais accessible publiquement. |
 | Données sensibles en logs | Les logs n'enregistrent jamais les mots de passe, tokens, ou numéros de carte. |
 
@@ -972,3 +972,4 @@ Admin → Fiche abonné → "Enregistrer un paiement" → Mode : Orange Money
 | 2.2 | 1er nov. 2026 | Benjamin (Entité C), décision de Rufin I. Baroan | §4.2.6 : activation on/off de chaque moyen de paiement par le gérant, seuls les moyens activés sont proposés (décision prise lors de la relecture de la FAQ, PR #22, ticket #23) |
 | 2.3 | 1er nov. 2026 | Benjamin (Entité C), décision de Rufin I. Baroan | §3.1 et §7.2 : **Laravel 13 (≥ 13.30) et PHP 8.3** au lieu de Laravel 11 / PHP 8.2. Laravel 11 n'est plus maintenu et `composer audit` y relève 5 failles, dont une critique (CVE-2026-114509), sans correctif dans cette branche (signalé par DeepSeek, PR #28, confirmé par Eric, ticket #30) |
 | 2.4 | 1er nov. 2026 | Benjamin (Entité C), décisions de Rufin I. Baroan | §1.3 : **contenu des formules** Starter, Essentiel et Pro, repris de la maquette validée et confirmé comme offres officielles (#51). §3.3 : sous-domaine `api-staging.abidjangym.com` (#42). §4.2.1 : **email unique sur toute la plateforme** pour les comptes gérant et caissier (#40). §6.5 : CSP complétée par `connect-src` vers l'API (sans elle, le navigateur bloquerait les appels du front), `base-uri` et `form-action` (#42) |
+| 2.5 | 4 nov. 2026 | Benjamin (Entité C) | §1.3 : **correction d'une erreur de la v2.4** : les notifications WhatsApp et les rapports avancés ne sont **pas inclus** dans Starter (lignes barrées dans la maquette `demo/landing.html`, perdues lors de la recopie). §6.4 : limitation des tentatives précisée, compteur séparé par route (PR #64) |
