@@ -1,0 +1,774 @@
+<div class="ob-layout">
+  <!-- LEFT PANEL -->
+  <aside class="ob-left">
+    <a href="/" class="brand-mark">
+      <div class="logo-icon">
+        <svg
+          width="20"
+          height="20"
+          fill="none"
+          stroke="white"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path d="M6 4v16M18 4v16M6 8h2M16 8h2M6 16h2M16 16h2M8 8h8M8 16h8" />
+        </svg>
+      </div>
+      <span class="logo-name">Abidjan<span>Gym</span></span>
+    </a>
+    <h1 class="ob-headline">Votre salle en ligne en 5 minutes</h1>
+    <p class="ob-sub">
+      Commencez avec 2 mois d’essai gratuit sur les formules payantes, sans
+      carte bancaire. Vous pouvez payer via Orange Money, MTN MoMo ou Wave.
+    </p>
+    <div class="perk-list">
+      <div class="perk">
+        <div class="perk-ic" style="background: rgba(255, 90, 30, 0.15)">
+          <svg
+            width="16"
+            height="16"
+            fill="none"
+            stroke="var(--accent)"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div class="perk-text">
+          <strong>2 mois d'essai gratuit</strong>
+          <span>Sans engagement, sans carte bancaire requise</span>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-ic" style="background: rgba(22, 163, 74, 0.15)">
+          <svg
+            width="16"
+            height="16"
+            fill="none"
+            stroke="#16A34A"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+        </div>
+        <div class="perk-text">
+          <strong>QR Code activé immédiatement</strong>
+          <span>Vos membres peuvent scanner dès aujourd'hui</span>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-ic" style="background: rgba(99, 102, 241, 0.15)">
+          <svg
+            width="16"
+            height="16"
+            fill="none"
+            stroke="#6366F1"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+          </svg>
+        </div>
+        <div class="perk-text">
+          <strong>Notifications WhatsApp incluses</strong>
+          <span>Rappels automatiques pour vos abonnés</span>
+        </div>
+      </div>
+      <div class="perk">
+        <div class="perk-ic" style="background: rgba(251, 191, 36, 0.15)">
+          <svg
+            width="16"
+            height="16"
+            fill="none"
+            stroke="#F59E0B"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <div class="perk-text">
+          <strong>Données sécurisées</strong>
+          <span>Hébergées en Côte d'Ivoire</span>
+        </div>
+      </div>
+    </div>
+    <div class="ob-bottom">
+      <svg
+        width="13"
+        height="13"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <rect x="3" y="11" width="18" height="11" rx="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+      Connexion sécurisée · vos données restent privées
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="ob-right">
+    <form id="onboarding-form" novalidate>
+      <div id="wizard-content">
+        <div
+          class="form-alert"
+          id="form-alert"
+          role="alert"
+          aria-live="assertive"
+          tabindex="-1"
+          hidden
+        ></div>
+        <p
+          class="sr-only"
+          id="step-announcement"
+          role="status"
+          aria-live="polite"
+        ></p>
+        <!-- Stepper -->
+        <div class="steps" role="list" aria-label="Étapes de l’inscription">
+          <div
+            class="step-item"
+            role="listitem"
+            data-step-item="1"
+            aria-current="step"
+          >
+            <div class="step-dot active" id="dot-1" aria-hidden="true">1</div>
+            <div class="step-label active" id="lbl-1">Votre salle</div>
+          </div>
+          <div class="step-line" id="line-1"></div>
+          <div class="step-item" role="listitem" data-step-item="2">
+            <div class="step-dot pending" id="dot-2" aria-hidden="true">2</div>
+            <div class="step-label pending" id="lbl-2">Compte admin</div>
+          </div>
+          <div class="step-line" id="line-2"></div>
+          <div class="step-item" role="listitem" data-step-item="3">
+            <div class="step-dot pending" id="dot-3" aria-hidden="true">3</div>
+            <div class="step-label pending" id="lbl-3">Formule</div>
+          </div>
+          <div class="step-line" id="line-3"></div>
+          <div class="step-item" role="listitem" data-step-item="4">
+            <div class="step-dot pending" id="dot-4" aria-hidden="true">4</div>
+            <div class="step-label pending" id="lbl-4">Confirmation</div>
+          </div>
+        </div>
+
+        <!-- STEP 1 — Infos salle -->
+        <div
+          class="step-panel active form-section"
+          id="panel-1"
+          role="group"
+          aria-labelledby="panel-title-1"
+        >
+          <h2 class="form-title" id="panel-title-1" tabindex="-1">
+            Votre salle de sport
+          </h2>
+          <div class="form-subtitle">
+            Ces informations seront visibles par vos abonnés.
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="gym_name">Nom de la salle <span>*</span></label>
+              <input
+                class="inp"
+                type="text"
+                placeholder="ex: FitZone Abidjan"
+                id="gym_name"
+                name="gym_name"
+                autocomplete="organization"
+                required
+                maxlength="80"
+                aria-describedby="form-alert"
+              />
+            </div>
+            <div class="field">
+              <label for="gym_district"
+                >Quartier / Commune <span>*</span></label
+              >
+              <select
+                class="inp"
+                id="gym_district"
+                name="gym_district"
+                required
+                maxlength="80"
+                aria-describedby="form-alert"
+              >
+                <option value="">Sélectionner...</option>
+                <option>Cocody</option>
+                <option>Marcory</option>
+                <option>Yopougon</option>
+                <option>Adjamé</option>
+                <option>Plateau</option>
+                <option>Treichville</option>
+                <option>Abobo</option>
+                <option>Koumassi</option>
+                <option>Port-Bouët</option>
+                <option>Bingerville</option>
+                <option>Autre</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="gym_address">Adresse complète <span>*</span></label>
+            <input
+              class="inp"
+              type="text"
+              id="gym_address"
+              name="gym_address"
+              autocomplete="street-address"
+              required
+              maxlength="255"
+              aria-describedby="form-alert"
+              placeholder="ex: Rue des Jardins, face Total, Cocody"
+            />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="gym_phone">Téléphone principal <span>*</span></label>
+              <div class="inp-prefix-wrap">
+                <span class="inp-prefix">🇨🇮 +225</span>
+                <input
+                  class="inp"
+                  type="tel"
+                  placeholder="07 00 00 00 00"
+                  id="gym_phone"
+                  name="gym_phone"
+                  autocomplete="tel-national"
+                  required
+                  inputmode="tel"
+                  aria-describedby="form-alert"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label for="gym_whatsapp"
+                >WhatsApp (pour les notifs) <span>*</span></label
+              >
+              <div class="inp-prefix-wrap">
+                <span class="inp-prefix">🇨🇮 +225</span>
+                <input
+                  class="inp"
+                  id="gym_whatsapp"
+                  name="gym_whatsapp"
+                  type="tel"
+                  autocomplete="tel-national"
+                  required
+                  inputmode="tel"
+                  aria-describedby="form-alert"
+                  placeholder="07 00 00 00 00"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="form-footer">
+            <a href="/" class="btn-back">← Retour</a>
+            <button class="btn-next" type="button" data-go-step="2">
+              Continuer
+              <svg
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2 — Compte admin -->
+        <div
+          class="step-panel form-section"
+          id="panel-2"
+          role="group"
+          aria-labelledby="panel-title-2"
+        >
+          <h2 class="form-title" id="panel-title-2" tabindex="-1">
+            Votre compte administrateur
+          </h2>
+          <div class="form-subtitle">
+            Vous utiliserez ces identifiants pour vous connecter.
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="admin_first_name">Prénom <span>*</span></label>
+              <input
+                class="inp"
+                id="admin_first_name"
+                name="admin_first_name"
+                type="text"
+                autocomplete="given-name"
+                required
+                maxlength="60"
+                aria-describedby="form-alert"
+                placeholder="Jean-Marc"
+              />
+            </div>
+            <div class="field">
+              <label for="admin_last_name">Nom <span>*</span></label>
+              <input
+                class="inp"
+                id="admin_last_name"
+                name="admin_last_name"
+                type="text"
+                autocomplete="family-name"
+                required
+                maxlength="60"
+                aria-describedby="form-alert"
+                placeholder="Kouassi"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label for="admin_email">Adresse email <span>*</span></label>
+            <input
+              class="inp"
+              id="admin_email"
+              name="admin_email"
+              type="email"
+              autocomplete="email"
+              required
+              maxlength="254"
+              aria-describedby="form-alert email-hint"
+              placeholder="jean@fitzoneabidjan.com"
+            />
+            <span class="field-hint" id="email-hint"
+              >Vous recevrez votre lien de confirmation ici.</span
+            >
+          </div>
+          <div class="field">
+            <label for="admin_mobile_money_number"
+              >Numéro Mobile Money (pour payer votre abonnement)
+              <span>*</span></label
+            >
+            <div class="inp-prefix-wrap">
+              <span class="inp-prefix">🇨🇮 +225</span>
+              <input
+                class="inp"
+                id="admin_mobile_money_number"
+                name="admin_mobile_money_number"
+                type="tel"
+                autocomplete="tel-national"
+                required
+                inputmode="tel"
+                aria-describedby="form-alert mobile-money-hint"
+                placeholder="07 00 00 00 00"
+              />
+            </div>
+            <span class="field-hint" id="mobile-money-hint"
+              >Orange Money, MTN MoMo ou Wave acceptés.</span
+            >
+          </div>
+          <div class="field">
+            <label for="admin_password">Mot de passe <span>*</span></label>
+            <input
+              class="inp"
+              id="admin_password"
+              name="admin_password"
+              type="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+              maxlength="72"
+              aria-describedby="form-alert password-hint"
+              placeholder="Minimum 8 caractères"
+            />
+            <span class="field-hint" id="password-hint"
+              >8 caractères minimum, avec une majuscule et un chiffre.</span
+            >
+          </div>
+          <div class="field">
+            <label for="admin_password_confirmation"
+              >Confirmer le mot de passe <span>*</span></label
+            >
+            <input
+              class="inp"
+              id="admin_password_confirmation"
+              name="admin_password_confirmation"
+              type="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+              maxlength="72"
+              aria-describedby="form-alert"
+              placeholder="Répétez le mot de passe"
+            />
+          </div>
+          <div class="form-footer">
+            <button class="btn-back" type="button" data-go-step="1">
+              ← Retour
+            </button>
+            <button class="btn-next" type="button" data-go-step="3">
+              Continuer
+              <svg
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3 — Formule -->
+        <div
+          class="step-panel form-section"
+          id="panel-3"
+          role="group"
+          aria-labelledby="panel-title-3"
+        >
+          <h2 class="form-title" id="panel-title-3" tabindex="-1">
+            Choisissez votre formule
+          </h2>
+          <div class="form-subtitle">
+            2 mois d’essai gratuit sur les formules payantes. Pas de CB requise.
+          </div>
+          <div class="plan-cards">
+            <label class="plan-opt">
+              <input
+                type="radio"
+                name="plan_code"
+                class="plan-opt-radio"
+                value="starter"
+                required
+                aria-label="Formule Starter"
+              />
+              <div class="plan-check"></div>
+              <div class="plan-opt-name">Starter</div>
+              <div class="plan-opt-price">0 <sub>FCFA/mois</sub></div>
+              <div class="plan-opt-features">
+                50 abonnés max · QR code · Mobile Money
+              </div>
+            </label>
+            <label class="plan-opt selected">
+              <input
+                type="radio"
+                name="plan_code"
+                class="plan-opt-radio"
+                value="essentiel"
+                checked
+                required
+                aria-label="Formule Essentiel"
+              />
+              <div class="plan-check">
+                <svg
+                  width="10"
+                  height="10"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div class="plan-opt-name">Essentiel ⭐</div>
+              <div class="plan-opt-price">15 000 <sub>FCFA/mois</sub></div>
+              <div class="plan-opt-features">
+                Abonnés illimités · WhatsApp · Rapports
+              </div>
+            </label>
+            <label class="plan-opt">
+              <input
+                type="radio"
+                name="plan_code"
+                class="plan-opt-radio"
+                value="pro"
+                required
+                aria-label="Formule Pro"
+              />
+              <div class="plan-check"></div>
+              <div class="plan-opt-name">Pro</div>
+              <div class="plan-opt-price">35 000 <sub>FCFA/mois</sub></div>
+              <div class="plan-opt-features">
+                Multi-salles · API · Support prioritaire
+              </div>
+            </label>
+          </div>
+          <div
+            style="
+              background: var(--ok-bg);
+              border: 1px solid rgba(22, 163, 74, 0.2);
+              border-radius: 12px;
+              padding: 14px 16px;
+              display: flex;
+              align-items: flex-start;
+              gap: 10px;
+              margin-bottom: 8px;
+            "
+          >
+            <svg
+              width="16"
+              height="16"
+              fill="none"
+              stroke="var(--ok)"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+              style="flex-shrink: 0; margin-top: 1px"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 8 12 12 14 14" />
+            </svg>
+            <div style="font-size: 13px; color: var(--fg-2)">
+              <strong style="color: var(--fg)">2 mois gratuits</strong> — vous
+              ne serez débité qu'à la fin de la période d'essai. Vous pouvez
+              annuler à tout moment depuis votre espace.
+            </div>
+          </div>
+          <div class="form-footer">
+            <button class="btn-back" type="button" data-go-step="2">
+              ← Retour
+            </button>
+            <button class="btn-next" type="button" data-go-step="4">
+              Valider et créer mon espace
+              <svg
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4 — Confirmation -->
+        <div
+          class="step-panel form-section"
+          id="panel-4"
+          role="group"
+          aria-labelledby="panel-title-4"
+        >
+          <h2 class="form-title" id="panel-title-4" tabindex="-1">
+            Tout est prêt !
+          </h2>
+          <div class="form-subtitle">
+            Vérifiez les informations avant de finaliser.
+          </div>
+          <div
+            style="
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 14px;
+              padding: 20px 24px;
+              margin-bottom: 24px;
+            "
+          >
+            <div
+              style="
+                font-family: var(--fd);
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--fg-3);
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+                margin-bottom: 12px;
+              "
+            >
+              Récapitulatif
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 13px;
+                  padding-bottom: 10px;
+                  border-bottom: 1px solid var(--border);
+                "
+              >
+                <span style="color: var(--fg-3)">Salle</span>
+                <span style="font-weight: 600" id="recap-salle">—</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 13px;
+                  padding-bottom: 10px;
+                  border-bottom: 1px solid var(--border);
+                "
+              >
+                <span style="color: var(--fg-3)">Commune</span>
+                <span style="font-weight: 600" id="recap-quartier">—</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 13px;
+                  padding-bottom: 10px;
+                  border-bottom: 1px solid var(--border);
+                "
+              >
+                <span style="color: var(--fg-3)">Formule</span>
+                <span
+                  style="font-weight: 600; color: var(--accent)"
+                  id="recap-plan"
+                  >Essentiel — 15 000 FCFA/mois</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 13px;
+                "
+              >
+                <span style="color: var(--fg-3)">Essai gratuit</span>
+                <span
+                  style="font-weight: 600; color: var(--ok)"
+                  id="recap-trial"
+                  >2 mois · aucun débit immédiat</span
+                >
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              align-items: flex-start;
+              gap: 10px;
+              margin-bottom: 28px;
+            "
+          >
+            <input
+              type="checkbox"
+              id="cgu"
+              name="terms_accepted"
+              required
+              style="
+                width: 16px;
+                height: 16px;
+                margin-top: 2px;
+                accent-color: var(--accent);
+              "
+            />
+            <label
+              for="cgu"
+              style="font-size: 13px; color: var(--fg-2); cursor: pointer"
+            >
+              J'accepte les
+              <a href="/cgu" style="color: var(--accent)"
+                >conditions générales d'utilisation</a
+              >
+              et la
+              <a href="/confidentialite" style="color: var(--accent)"
+                >politique de confidentialité</a
+              >
+              d'AbidjanGym.
+            </label>
+          </div>
+          <div class="form-footer">
+            <button class="btn-back" type="button" data-go-step="3">
+              ← Retour
+            </button>
+            <button
+              class="btn-next"
+              type="submit"
+              style="
+                background: var(--ok);
+                box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+              "
+            >
+              <svg
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Créer mon espace gratuitement
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- SUCCESS -->
+      <div class="success-wrap form-section" id="success">
+        <div class="success-icon">
+          <svg
+            width="32"
+            height="32"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <h2 class="success-title" tabindex="-1">
+          Bienvenue sur AbidjanGym ! 🎉
+        </h2>
+        <p class="success-sub">
+          Votre espace est créé. Un email de confirmation a été envoyé. Vous
+          pouvez accéder à votre tableau de bord maintenant.
+        </p>
+        <div class="success-info">
+          <div class="si-row">
+            <span class="si-label">URL de votre espace</span>
+            <span
+              class="si-value"
+              id="success-administration-url-value"
+              style="
+                color: var(--accent);
+                font-family: monospace;
+                font-size: 12px;
+              "
+            ></span>
+          </div>
+          <div class="si-row">
+            <span class="si-label">Formule</span>
+            <span class="si-value" id="success-plan"></span>
+          </div>
+          <div class="si-row">
+            <span class="si-label">Essai gratuit</span>
+            <span class="si-value" id="success-trial"></span>
+          </div>
+        </div>
+        <a
+          id="success-dashboard-link"
+          class="btn-next"
+          hidden
+          style="display: inline-flex; text-decoration: none"
+        >
+          Accéder à mon tableau de bord
+          <svg
+            width="15"
+            height="15"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+    </form>
+  </main>
+</div>
