@@ -97,6 +97,21 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    # Les tests tournent sous SQLite, mais Hostinger utilise MySQL : les migrations
+    # sont aussi exécutées sur MySQL (mot de passe jetable, propre à ce conteneur).
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: abidjangym_ci
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,7 +126,7 @@ jobs:
         if: steps.diff.outputs.change == 'true'
         with:
           php-version: '8.3'
-          extensions: mbstring, intl, pdo_sqlite, sqlite3, zip, bcmath
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, pdo_mysql, zip, bcmath
           coverage: none
           tools: composer:v2
       - name: Cache Composer
@@ -151,3 +166,16 @@ jobs:
           cp .env.example .env
           php artisan key:generate --no-interaction
           php artisan test
+      - name: Migrations sur MySQL 8 (aller, retour, aller)
+        if: steps.diff.outputs.change == 'true'
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: abidjangym_ci
+          DB_USERNAME: root
+          DB_PASSWORD: ''
+        run: |
+          php artisan migrate:fresh --force --no-interaction
+          php artisan migrate:reset --force --no-interaction
+          php artisan migrate --force --no-interaction
